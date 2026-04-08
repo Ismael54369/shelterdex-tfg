@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 // Datos falsos de las tareas pendientes
 const tareasPendientes = [
@@ -21,9 +22,15 @@ function Dashboard() {
     if (nuevaXp >= xpNecesaria) {
       setNivel(nivel + 1);
       setXp(nuevaXp - xpNecesaria); // Guardamos el sobrante para el siguiente nivel
-      alert(`¡Súper efectivo! Has ayudado a ${animal} y has SUBIDO DE NIVEL.`);
+      toast.success(`¡LEVEL UP! Has subido al nivel ${nivel + 1}`, {
+      icon: '🆙',
+      style: { background: '#FFCB05' } // Amarillo Pikachu
+      });
     } else {
       setXp(nuevaXp);
+      toast.success(`+${recompensa} XP para tu equipo`, {
+        icon: '⭐'
+      });
     }
   };
 

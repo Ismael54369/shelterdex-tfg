@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 function Login() {
   // Usaremos esto más adelante para redirigir al usuario al Dashboard cuando acierte la contraseña
@@ -7,6 +8,9 @@ function Login() {
   const handleLogin = (e) => {
     e.preventDefault(); 
     // Usamos la función navigate para enviarlo al dashboard
+    toast.success('¡Entrenador conectado con éxito!', {
+      icon: '🎫',
+    });
     navigate('/dashboard');
   };
 

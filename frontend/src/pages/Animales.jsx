@@ -61,9 +61,12 @@ function Animales() {
             </div>
 
             {/* Botón de acción */}
-            <button className="w-full bg-pokeRed text-white font-retro text-sm py-3 rounded border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-colors">
+            <Link 
+              to={`/animales/${animal.id}`}
+              className="w-full bg-pokeRed text-white font-retro text-sm py-3 rounded border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-colors text-center block"
+            >
               Ver Ficha
-            </button>
+            </Link>
             
           </div>
         ))}
