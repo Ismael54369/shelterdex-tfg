@@ -5,7 +5,6 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Animales from './pages/Animales';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Faq from './pages/Faq';
 import Soporte from './pages/Soporte';
@@ -14,6 +13,8 @@ import Privacidad from './pages/Privacidad';
 import Cookies from './pages/Cookies';
 import DetalleAnimal from './pages/DetalleAnimal';
 import Donaciones from './pages/Donaciones';
+import RutaProtegida from './components/RutaProtegida';
+import DashboardVoluntario from './pages/DashboardVoluntario';
 
 function App() {
   return (
@@ -40,8 +41,25 @@ function App() {
             <Route path="/animales" element={<Animales />} />
             <Route path="/animales/:id" element={<DetalleAnimal />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            {/* Panel para voluntarios (requiere login, pero sin rol específico) */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <RutaProtegida>
+                  <DashboardVoluntario />
+                </RutaProtegida>
+              } 
+            />
+
+            {/* Panel de Administración (requiere login Y rol de admin) */}
+            <Route 
+              path="/admin" 
+              element={
+                <RutaProtegida rolRequerido="admin">
+                  <AdminDashboard />
+                </RutaProtegida>
+              } 
+            />
             <Route path="/faq" element={<Faq />} />
             <Route path="/soporte" element={<Soporte />} />
             <Route path="/terminos" element={<Terminos />} />
