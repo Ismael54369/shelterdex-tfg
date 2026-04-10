@@ -1,32 +1,62 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-// Datos temporales simulando lo que nos devolverá la Base de Datos en el futuro
-const animalesMock = [
-  { id: 1, nombre: 'Rex', especie: 'Perro', energia: 80, sociabilidad: 60, emoji: '🐶' },
-  { id: 2, nombre: 'Luna', especie: 'Gato', energia: 40, sociabilidad: 90, emoji: '🐱' },
-  { id: 3, nombre: 'Toby', especie: 'Perro', energia: 95, sociabilidad: 50, emoji: '🐕' },
-  { id: 4, nombre: 'Milo', especie: 'Gato', energia: 30, sociabilidad: 80, emoji: '🐈' },
-];
-
 function Animales() {
+  const [animales, setAnimales] = useState([]);
+  const [filtro, setFiltro] = useState('Todos');
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/animales')
+      .then(res => res.json())
+      .then(datos => {
+        if (Array.isArray(datos)) setAnimales(datos);
+      })
+      .catch(error => console.error('Error cargando animales:', error));
+  }, []);
+
+  // Filtramos según la especie seleccionada
+  const animalesFiltrados = filtro === 'Todos' 
+    ? animales 
+    : animales.filter(a => a.especie === filtro);
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       
-      <div className="flex justify-between items-end mb-8 border-b-4 border-pokeDark pb-4 mt-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b-4 border-pokeDark pb-4 mt-6 gap-4">
         <div>
-          <h1 className="text-3xl font-retro text-pokeRed mb-2">Poké... digo, ¡Adopciones!</h1>
+          <h1 className="text-xl sm:text-3xl font-retro text-pokeRed mb-2">Poké... digo, ¡Adopciones!</h1>
           <p className="text-lg font-bold text-gray-700">Encuentra a tu compañero ideal.</p>
+        </div>
+
+        {/* Filtro por especie */}
+        <div className="flex gap-2 flex-wrap">
+          {['Todos', 'Perro', 'Gato', 'Otro'].map((opcion) => (
+            <button
+              key={opcion}
+              onClick={() => setFiltro(opcion)}
+              className={`font-bold text-sm px-4 py-2 rounded border-2 transition-colors ${
+                filtro === opcion
+                  ? 'bg-pokeDark text-white border-pokeDark'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-pokeDark'
+              }`}
+            >
+              {opcion}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Grid de tarjetas de animales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {animalesMock.map((animal) => (
+        {animalesFiltrados.map((animal) => (
           <div key={animal.id} className="poke-card p-4 flex flex-col">
             
-            {/* Foto simulada con un recuadro retro y un emoji */}
-            <div className="bg-pokeLight border-4 border-pokeDark rounded-lg h-40 flex items-center justify-center text-6xl mb-4 shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)]">
-              {animal.emoji}
+            {/* Foto o emoji como fallback */}
+            <div className="bg-pokeLight border-4 border-pokeDark rounded-lg h-40 flex items-center justify-center mb-4 shadow-[inset_2px_2px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+              {animal.imagen 
+                ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-full h-full object-cover" />
+                : <span className="text-6xl">{animal.emoji}</span>
+              }
             </div>
 
             {/* Nombre y Especie */}
@@ -37,7 +67,18 @@ function Animales() {
               </span>
             </div>
 
-            {/* Estadísticas (Barras de progreso) */}
+            {/* Estado */}
+            <div className="mb-4">
+              <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${
+                animal.estado === 'Refugio' ? 'bg-blue-100 text-blue-700 border border-blue-300' :
+                animal.estado === 'Acogida' ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' :
+                'bg-green-100 text-green-700 border border-green-300'
+              }`}>
+                {animal.estado}
+              </span>
+            </div>
+
+            {/* Estadísticas */}
             <div className="space-y-3 mb-6 flex-grow font-bold text-sm">
               <div>
                 <div className="flex justify-between mb-1">
@@ -71,6 +112,12 @@ function Animales() {
           </div>
         ))}
       </div>
+
+      {animalesFiltrados.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-xl font-bold text-gray-500">No hay animales que coincidan con el filtro.</p>
+        </div>
+      )}
 
     </div>
   );
