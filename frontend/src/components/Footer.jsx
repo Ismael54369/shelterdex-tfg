@@ -28,8 +28,7 @@ function Footer() {
         <div className="text-center md:text-right font-bold text-xs text-gray-500">
           <p>© {anioActual} Ismael Gonzalez Tempa.</p>
           <p>Todos los derechos reservados.</p>
-          <p className="text-pokeYellow mt-1">Diseñado y desarrollado por Ismael Gonzalez Tempa</p>
-        </div>
+<p className="text-pokeYellow mt-1 text-[10px] sm:text-xs">Diseñado y desarrollado por Ismael Gonzalez Tempa</p>        </div>
 
       </div>
     </footer>

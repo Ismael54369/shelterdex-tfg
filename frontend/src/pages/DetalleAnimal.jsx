@@ -97,7 +97,7 @@ function DetalleAnimal() {
             }
           </div>
           <h1 className="text-2xl sm:text-4xl font-retro text-pokeDark mb-2">{animal.nombre}</h1>
-          <div className="flex gap-2 font-bold mb-4">
+          <div className="flex gap-2 font-bold mb-4 flex-wrap justify-center">
             <span className="bg-gray-200 px-3 py-1 rounded-full border-2 border-pokeDark uppercase text-sm">
               Nº {animal.id.toString().padStart(3, '0')}
             </span>
