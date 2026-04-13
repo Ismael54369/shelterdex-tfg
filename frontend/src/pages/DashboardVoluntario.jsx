@@ -69,7 +69,10 @@ function DashboardVoluntario() {
     try {
       const respuesta = await fetch('http://localhost:3000/api/tareas/registrar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify({
           usuario_id: Number(idUsuario),
           animal_id: animalId,
@@ -161,7 +164,7 @@ function DashboardVoluntario() {
 
         {/* COLUMNA IZQUIERDA: Animales con desplegable de tareas (70%) */}
         <div className="lg:w-2/3">
-          <h2 className="text-2xl font-retro text-pokeDark mb-4">Animales en el Refugio</h2>
+          <h2 className="text-lg sm:text-2xl font-retro text-pokeDark mb-4">Animales en el Refugio</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {animales.map((animal) => (
               <div key={animal.id} className="bg-white border-4 border-pokeDark rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_#222224]">
@@ -202,7 +205,7 @@ function DashboardVoluntario() {
 
                   {/* Desplegable: lista de tareas del catálogo */}
                   {animalSeleccionado === animal.id && (
-                    <div className="mt-3 flex flex-col gap-2 animate-pulse-once">
+                    <div className="mt-3 flex flex-col gap-1 sm:gap-2">
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Selecciona una tarea:</p>
                       {catalogo.map((tarea) => (
                         <button

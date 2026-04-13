@@ -5,6 +5,14 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  // Helper: cabeceras con token JWT para peticiones autenticadas
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
+  const authHeadersJSON = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('token')}`
+  });
   const [animales, setAnimales] = useState([]);
   
   // Estados para los modales
@@ -31,8 +39,7 @@ function AdminDashboard() {
   }, []);
 
   const cargarSolicitudesAdopcion = () => {
-    fetch('http://localhost:3000/api/adopciones/pendientes')
-      .then(res => res.json())
+fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders() })      .then(res => res.json())
       .then(datos => {
         if (Array.isArray(datos)) setSolicitudesAdopcion(datos);
       })
@@ -43,7 +50,7 @@ function AdminDashboard() {
     try {
       const respuesta = await fetch(`http://localhost:3000/api/adopciones/revisar/${idSolicitud}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeadersJSON(),
         body: JSON.stringify({ estado })
       });
 
@@ -70,15 +77,13 @@ function AdminDashboard() {
   };
 
   const cargarEstadisticas = () => {
-    fetch('http://localhost:3000/api/admin/estadisticas')
-      .then(res => res.json())
+fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() })      .then(res => res.json())
       .then(datos => setEstadisticas(datos))
       .catch(error => console.error('Error cargando estadísticas:', error));
   };
 
   const cargarTareasPendientes = () => {
-    fetch('http://localhost:3000/api/tareas/pendientes')
-      .then(respuesta => respuesta.json())
+fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })      .then(respuesta => respuesta.json())
       .then(datos => {
         if (Array.isArray(datos)) setTareasPendientes(datos);
       })
@@ -90,7 +95,7 @@ function AdminDashboard() {
     try {
       const respuesta = await fetch(`http://localhost:3000/api/tareas/revisar/${idRegistro}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeadersJSON(),
         body: JSON.stringify({ estado })
       });
 
@@ -121,7 +126,7 @@ function AdminDashboard() {
   
   const confirmarBorrado = async () => {
     try {
-      await fetch(`http://localhost:3000/api/animales/${animalSeleccionado.id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:3000/api/animales/${animalSeleccionado.id}`, { method: 'DELETE', headers: authHeaders() });      
       setAnimales(animales.filter(a => a.id !== animalSeleccionado.id));
       toast.success(`${animalSeleccionado.nombre} eliminado.`, { icon: '🗑️' });
       setAnimalSeleccionado(null);
@@ -139,7 +144,7 @@ function AdminDashboard() {
     try {
       const respuesta = await fetch('http://localhost:3000/api/animales', {
         method: 'POST',
-        // SIN header 'Content-Type' — el navegador lo pone automáticamente como multipart/form-data
+        headers: authHeaders(),
         body: formData
       });
       const resultado = await respuesta.json();
@@ -181,6 +186,7 @@ function AdminDashboard() {
     try {
       const respuesta = await fetch(`http://localhost:3000/api/animales/${animalAEditar.id}`, {
         method: 'PUT',
+        headers: authHeaders(),
         body: formData
       });
       
@@ -207,7 +213,7 @@ function AdminDashboard() {
 
   return (
     <div className="container mx-auto p-4 max-w-6xl relative">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-pokeDark text-white p-6 rounded-xl border-4 border-pokeYellow shadow-[4px_4px_0px_0px_rgba(238,21,21,1)] mt-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 sm:mb-8 bg-pokeDark text-white p-4 sm:p-6 rounded-xl border-4 border-pokeYellow shadow-[4px_4px_0px_0px_rgba(238,21,21,1)] mt-4 sm:mt-6">
         <div>
           <h1 className="text-xl sm:text-3xl font-retro text-pokeLight mb-2">PC de Gestión (Admin)</h1>
           <p className="font-bold text-pokeYellow">
@@ -216,17 +222,17 @@ function AdminDashboard() {
         </div>
         
         {/* Contenedor de botones modificado para que siempre se vea */}
-        <div className="flex gap-4 mt-4 md:mt-0 w-full md:w-auto justify-center">
+        <div className="flex gap-2 sm:gap-4 mt-4 md:mt-0 w-full md:w-auto justify-center">
           <button 
             onClick={() => setModalCrearAbierto(true)} 
-            className="bg-pokeRed text-white font-retro text-sm px-6 py-3 rounded border-4 border-white hover:bg-white hover:text-pokeRed transition-colors"
+            className="bg-pokeRed text-white font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded border-2 sm:border-4 border-white hover:bg-white hover:text-pokeRed transition-colors flex-1 md:flex-none"
           >
             + Añadir Nuevo
           </button>
           
           <button 
             onClick={handleCerrarSesion} 
-            className="bg-gray-500 text-white font-retro text-sm px-6 py-3 rounded border-4 border-white hover:bg-white hover:text-gray-800 transition-colors"
+            className="bg-gray-500 text-white font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded border-2 sm:border-4 border-white hover:bg-white hover:text-gray-800 transition-colors flex-1 md:flex-none"
           >
             Cerrar Sesión
           </button>
@@ -237,7 +243,7 @@ function AdminDashboard() {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
         <button
           onClick={() => setSeccionActiva('animales')}
-          className={`font-retro text-sm px-6 py-3 rounded-t border-4 transition-colors ${
+          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap
             seccionActiva === 'animales'
               ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
               : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
@@ -247,7 +253,7 @@ function AdminDashboard() {
         </button>
         <button
           onClick={() => setSeccionActiva('tareas')}
-          className={`font-retro text-sm px-6 py-3 rounded-t border-4 transition-colors relative ${
+          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors relative ${
             seccionActiva === 'tareas'
               ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
               : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
@@ -262,7 +268,7 @@ function AdminDashboard() {
         </button>
         <button
           onClick={() => { setSeccionActiva('estadisticas'); cargarEstadisticas(); }}
-          className={`font-retro text-sm px-6 py-3 rounded-t border-4 transition-colors ${
+          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors ${
             seccionActiva === 'estadisticas'
               ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
               : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
@@ -272,7 +278,7 @@ function AdminDashboard() {
         </button>
         <button
           onClick={() => { setSeccionActiva('adopciones'); cargarSolicitudesAdopcion(); }}
-          className={`font-retro text-sm px-6 py-3 rounded-t border-4 transition-colors relative ${
+          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors relative ${
             seccionActiva === 'adopciones'
               ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
               : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
@@ -462,8 +468,8 @@ function AdminDashboard() {
 
       {/* SECCIÓN: VALIDACIÓN DE TAREAS */}
       {seccionActiva === 'tareas' && (
-        <div className="poke-card p-6">
-          <h2 className="text-xl font-retro text-pokeDark mb-6 border-b-4 border-pokeDark pb-3">
+        <div className="poke-card p-4 sm:p-6">
+          <h2 className="text-base sm:text-xl font-retro text-pokeDark mb-4 sm:mb-6 border-b-4 border-pokeDark pb-3">
             Bandeja de Validación
           </h2>
 
@@ -520,25 +526,25 @@ function AdminDashboard() {
         <div className="flex flex-col gap-6">
 
           {/* TARJETAS KPI */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
             <div className="poke-card p-4 text-center">
-              <p className="text-3xl font-retro text-pokeBlue">
+              <p className="text-xl sm:text-3xl font-retro text-pokeBlue">
                 {estadisticas.animalesPorEstado.reduce((sum, e) => sum + e.total, 0)}
               </p>
               <p className="text-sm font-bold text-gray-500 uppercase mt-1">Animales Totales</p>
             </div>
             <div className="poke-card p-4 text-center">
-              <p className="text-3xl font-retro text-pokeRed">{estadisticas.totalVoluntarios}</p>
+              <p className="text-xl sm:text-3xl font-retro text-pokeRed">{estadisticas.totalVoluntarios}</p>
               <p className="text-sm font-bold text-gray-500 uppercase mt-1">Voluntarios</p>
             </div>
             <div className="poke-card p-4 text-center">
-              <p className="text-3xl font-retro text-green-600">
+              <p className="text-xl sm:text-3xl font-retro text-green-600">
                 {estadisticas.tareasPorEstado.find(t => t.estado === 'aprobada')?.total || 0}
               </p>
               <p className="text-sm font-bold text-gray-500 uppercase mt-1">Tareas Aprobadas</p>
             </div>
             <div className="poke-card p-4 text-center">
-              <p className="text-3xl font-retro text-yellow-500">
+              <p className="text-xl sm:text-3xl font-retro text-yellow-500">
                 {estadisticas.tareasPorEstado.find(t => t.estado === 'pendiente')?.total || 0}
               </p>
               <p className="text-sm font-bold text-gray-500 uppercase mt-1">Pendientes</p>
@@ -549,8 +555,8 @@ function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Gráfico de Tarta: Animales por estado */}
-            <div className="poke-card p-6">
-              <h3 className="font-retro text-pokeDark mb-4 text-center">Animales por Estado</h3>
+            <div className="poke-card p-3 sm:p-6">
+              <h3 className="font-retro text-sm sm:text-base text-pokeDark mb-4 text-center">Animales por Estado</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
@@ -622,8 +628,8 @@ function AdminDashboard() {
 
       {/* SECCIÓN: SOLICITUDES DE ADOPCIÓN */}
       {seccionActiva === 'adopciones' && (
-        <div className="poke-card p-6">
-          <h2 className="text-xl font-retro text-pokeDark mb-6 border-b-4 border-pokeDark pb-3">
+        <div className="poke-card p-4 sm:p-6">
+          <h2 className="text-base sm:text-xl font-retro text-pokeDark mb-4 sm:mb-6 border-b-4 border-pokeDark pb-3">
             Solicitudes de Adopción
           </h2>
 

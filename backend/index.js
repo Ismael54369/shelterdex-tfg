@@ -46,6 +46,38 @@ const upload = multer({
 });
 
 // ==========================================
+// MIDDLEWARES DE SEGURIDAD (JWT)
+// ==========================================
+
+// Middleware que verifica que el usuario tiene un token válido
+const verificarToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  // El header viene como "Bearer <token>", extraemos solo el token
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Acceso denegado. No se proporcionó token de autenticación.' });
+  }
+
+  try {
+    // jwt.verify lanza un error si el token es inválido o ha expirado
+    const datosUsuario = jwt.verify(token, process.env.JWT_SECRET);
+    req.usuario = datosUsuario; // Guardamos los datos del usuario (id, rol, nombre) para usarlos en la ruta
+    next(); // Continuamos a la siguiente función (la ruta real)
+  } catch (error) {
+    return res.status(403).json({ error: 'Token inválido o expirado.' });
+  }
+};
+
+// Middleware que verifica que además de estar logueado, el usuario es Admin
+const verificarAdmin = (req, res, next) => {
+  if (req.usuario.rol !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de administrador.' });
+  }
+  next();
+};
+
+// ==========================================
 // RUTAS DE LA API (Endpoints)
 // ==========================================
 
@@ -81,8 +113,7 @@ app.get('/api/animales/:id', async (req, res) => {
 });
 
 // RUTA 2: Borrar un animal (DELETE)
-app.delete('/api/animales/:id', async (req, res) => {
-  try {
+app.delete('/api/animales/:id', verificarToken, verificarAdmin, async (req, res) => {  try {
     const idAnimal = req.params.id;
     
     // Ejecutamos la consulta SQL para borrar
@@ -102,8 +133,7 @@ app.delete('/api/animales/:id', async (req, res) => {
 });
 
 // RUTA 3: Añadir un nuevo animal (CREATE - POST) — Ahora con imagen opcional
-app.post('/api/animales', upload.single('imagen'), async (req, res) => {
-  try {
+app.post('/api/animales', verificarToken, verificarAdmin, upload.single('imagen'), async (req, res) => {  try {
     const { nombre, especie, edad, peso, energia, sociabilidad, emoji, descripcion } = req.body;
     
     // Si se subió una imagen, guardamos la ruta relativa; si no, queda NULL
@@ -140,8 +170,7 @@ app.post('/api/animales', upload.single('imagen'), async (req, res) => {
 });
 
 // RUTA 4: Actualizar un animal existente (UPDATE - PUT) — Ahora con imagen opcional
-app.put('/api/animales/:id', upload.single('imagen'), async (req, res) => {
-  try {
+app.put('/api/animales/:id', verificarToken, verificarAdmin, upload.single('imagen'), async (req, res) => {  try {
     const idAnimal = req.params.id;
     const { nombre, especie, edad, peso, energia, sociabilidad, emoji, descripcion, estado } = req.body;
     
@@ -266,7 +295,7 @@ app.get('/api/tareas/catalogo', async (req, res) => {
 });
 
 // 2. REGISTRAR UNA TAREA (el voluntario solicita, NO gana XP aún)
-app.post('/api/tareas/registrar', async (req, res) => {
+app.post('/api/tareas/registrar', verificarToken, async (req, res) => {
   try {
     const { usuario_id, animal_id, tarea_id } = req.body;
 
@@ -299,7 +328,7 @@ app.post('/api/tareas/registrar', async (req, res) => {
 });
 
 // 3. OBTENER TAREAS PENDIENTES (para la bandeja del Admin)
-app.get('/api/tareas/pendientes', async (req, res) => {
+app.get('/api/tareas/pendientes', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const [pendientes] = await db.query(`
       SELECT 
@@ -327,8 +356,7 @@ app.get('/api/tareas/pendientes', async (req, res) => {
 });
 
 // 4. REVISAR (APROBAR/RECHAZAR) UNA TAREA (Solo Admin)
-app.put('/api/tareas/revisar/:id', async (req, res) => {
-  try {
+app.put('/api/tareas/revisar/:id', verificarToken, verificarAdmin, async (req, res) => {  try {
     const idRegistro = req.params.id;
     const { estado } = req.body;
 
@@ -424,8 +452,7 @@ app.get('/api/ranking', async (req, res) => {
 // ==========================================
 // RUTA DE ESTADÍSTICAS (DASHBOARD ADMIN)
 // ==========================================
-app.get('/api/admin/estadisticas', async (req, res) => {
-  try {
+app.get('/api/admin/estadisticas', verificarToken, verificarAdmin, async (req, res) => {  try {
     // 1. Animales por estado
     const [animalesPorEstado] = await db.query(`
       SELECT estado, COUNT(*) AS total 
@@ -518,8 +545,7 @@ app.post('/api/adopciones/solicitar', async (req, res) => {
 });
 
 // 2. OBTENER SOLICITUDES PENDIENTES (para el Admin)
-app.get('/api/adopciones/pendientes', async (req, res) => {
-  try {
+app.get('/api/adopciones/pendientes', verificarToken, verificarAdmin, async (req, res) => {  try {
     const [pendientes] = await db.query(`
       SELECT 
         sa.id,
@@ -546,8 +572,7 @@ app.get('/api/adopciones/pendientes', async (req, res) => {
 });
 
 // 3. REVISAR SOLICITUD DE ADOPCIÓN (Admin aprueba o rechaza)
-app.put('/api/adopciones/revisar/:id', async (req, res) => {
-  try {
+app.put('/api/adopciones/revisar/:id', verificarToken, verificarAdmin, async (req, res) => {  try {
     const idSolicitud = req.params.id;
     const { estado } = req.body;
 

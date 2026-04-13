@@ -102,11 +102,11 @@ function Donaciones() {
   return (
     <div className="container mx-auto p-4 max-w-4xl mt-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-retro text-pokeRed mb-4 drop-shadow-[2px_2px_0px_#222224]">Apoya al Refugio</h1>
+        <h1 className="text-xl sm:text-3xl font-retro text-pokeRed mb-4 drop-shadow-[2px_2px_0px_#222224]">Apoya al Refugio</h1>
         <p className="text-lg font-bold text-gray-700">Tu aportación es vital para mantener nuestras instalaciones operativas.</p>
       </div>
 
-      <div className="poke-card p-6 md:p-10 bg-white grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="poke-card p-4 sm:p-6 md:p-10 bg-white grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
         
         {/* Columna Izquierda: Cantidad */}
         <div>
