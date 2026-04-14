@@ -7,6 +7,8 @@ function DetalleAnimal() {
   const navigate = useNavigate();
   const [animal, setAnimal] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const [imagenes, setImagenes] = useState([]);
+  const [imagenActiva, setImagenActiva] = useState(0);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
@@ -19,6 +21,11 @@ function DetalleAnimal() {
       .then(datos => {
         setAnimal(datos);
         setCargando(false);
+        // Cargar galería de imágenes
+        fetch(`http://localhost:3000/api/animales/${id}/imagenes`)
+          .then(r => r.json())
+          .then(imgs => { if (Array.isArray(imgs)) setImagenes(imgs); })
+          .catch(() => {});
       })
       .catch(() => {
         setAnimal(null);
@@ -90,12 +97,62 @@ function DetalleAnimal() {
         
         {/* Columna Izquierda: Foto y datos básicos */}
         <div className="flex flex-col items-center text-center">
-          <div className="bg-pokeLight border-4 border-pokeDark rounded-xl w-full h-64 flex items-center justify-center mb-6 shadow-[inset_4px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden">
-            {animal.imagen 
-              ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-full h-full object-cover" />
-              : <span className="text-8xl">{animal.emoji}</span>
-            }
+          {/* Imagen principal o galería */}
+          <div className="bg-pokeLight border-4 border-pokeDark rounded-xl w-full aspect-[4/3] flex items-center justify-center mb-3 shadow-[inset_4px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden relative">
+            {imagenes.length > 0 ? (
+              <>
+                <img 
+                  src={`http://localhost:3000${imagenes[imagenActiva]?.ruta}`} 
+                  alt={animal.nombre} 
+                  className="w-full h-full object-cover" 
+                />
+                {/* Flechas de navegación */}
+                {imagenes.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setImagenActiva(imagenActiva > 0 ? imagenActiva - 1 : imagenes.length - 1)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70 font-bold"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={() => setImagenActiva(imagenActiva < imagenes.length - 1 ? imagenActiva + 1 : 0)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70 font-bold"
+                    >
+                      ›
+                    </button>
+                    {/* Contador */}
+                    <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs font-bold px-2 py-1 rounded">
+                      {imagenActiva + 1}/{imagenes.length}
+                    </span>
+                  </>
+                )}
+              </>
+            ) : animal.imagen ? (
+              <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-8xl">{animal.emoji}</span>
+            )}
           </div>
+
+          {/* Miniaturas de la galería */}
+          {imagenes.length > 1 && (
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+              {imagenes.map((img, index) => (
+                <button
+                  key={img.id}
+                  onClick={() => setImagenActiva(index)}
+                  className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-4 transition-all ${
+                    imagenActiva === index 
+                      ? 'border-pokeYellow shadow-[0_0_8px_rgba(234,179,8,0.5)]' 
+                      : 'border-gray-300 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <img src={`http://localhost:3000${img.ruta}`} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           <h1 className="text-2xl sm:text-4xl font-retro text-pokeDark mb-2">{animal.nombre}</h1>
           <div className="flex gap-2 font-bold mb-4 flex-wrap justify-center">
             <span className="bg-gray-200 px-3 py-1 rounded-full border-2 border-pokeDark uppercase text-sm">

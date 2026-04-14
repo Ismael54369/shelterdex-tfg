@@ -13,6 +13,8 @@ function DashboardVoluntario() {
   const [xp, setXp] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [animalSeleccionado, setAnimalSeleccionado] = useState(null); // ID del animal con desplegable abierto
+  const [historial, setHistorial] = useState([]);
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
 
   const nombreUsuario = localStorage.getItem('usuarioNombre');
   const idUsuario = localStorage.getItem('usuarioId');
@@ -61,6 +63,27 @@ function DashboardVoluntario() {
     }
   };
 
+  const cargarHistorial = async () => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/tareas/historial/${idUsuario}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('tokenShelterDex')}` }
+      });
+      const datos = await res.json();
+      if (Array.isArray(datos)) {
+        setHistorial(datos);
+      }
+    } catch (error) {
+      console.error('Error al cargar historial:', error);
+    }
+  };
+
+  const toggleHistorial = () => {
+    if (!mostrarHistorial) {
+      cargarHistorial(); // Solo cargamos cuando se abre, no antes
+    }
+    setMostrarHistorial(!mostrarHistorial);
+  };
+
   // --- SOLICITAR TAREA (POST al backend, sin XP directa) ---
   const solicitarTarea = async (animalId, animalNombre, tareaId, tareaNombre) => {
     if (cargando) return;
@@ -71,7 +94,7 @@ function DashboardVoluntario() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('tokenShelterDex')}`
         },
         body: JSON.stringify({
           usuario_id: Number(idUsuario),
@@ -101,7 +124,7 @@ function DashboardVoluntario() {
 
   // --- CERRAR SESIÓN ---
   const handleCerrarSesion = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('tokenShelterDex');
     localStorage.removeItem('usuarioNombre');
     localStorage.removeItem('usuarioId');
     localStorage.removeItem('usuarioRol');
@@ -237,6 +260,65 @@ function DashboardVoluntario() {
             )}
           </div>
         </div>
+
+        {/* Botón de historial */}
+          <button
+            onClick={toggleHistorial}
+            className={`w-full font-bold py-3 px-4 rounded-lg border-4 transition-all mt-4 ${
+              mostrarHistorial
+                ? 'bg-pokeDark text-pokeYellow border-pokeYellow'
+                : 'bg-white text-pokeDark border-pokeDark hover:bg-pokeDark hover:text-white'
+            }`}
+          >
+            {mostrarHistorial ? '✕ Cerrar historial' : '📜 Ver mi historial de tareas'}
+          </button>
+
+          {/* Historial de tareas */}
+          {mostrarHistorial && (
+            <div className="mt-4 bg-white border-4 border-pokeDark rounded-xl p-4 shadow-[4px_4px_0px_0px_#222224]">
+              <h3 className="font-retro text-pokeDark mb-4 border-b-2 border-pokeDark pb-2">Mis Últimas Tareas</h3>
+              
+              {historial.length === 0 ? (
+                <p className="text-center text-gray-500 font-bold py-6">Aún no has registrado ninguna tarea.</p>
+              ) : (
+                <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+                  {historial.map((tarea) => (
+                    <div 
+                      key={tarea.id} 
+                      className={`p-3 rounded-lg border-2 ${
+                        tarea.estado === 'aprobada' ? 'bg-green-50 border-green-300' :
+                        tarea.estado === 'rechazada' ? 'bg-red-50 border-red-300' :
+                        'bg-yellow-50 border-yellow-300'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-gray-800 text-sm truncate">
+                            {tarea.emoji} {tarea.tarea} → {tarea.animal}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(tarea.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${
+                            tarea.estado === 'aprobada' ? 'bg-green-200 text-green-800' :
+                            tarea.estado === 'rechazada' ? 'bg-red-200 text-red-800' :
+                            'bg-yellow-200 text-yellow-800'
+                          }`}>
+                            {tarea.estado === 'aprobada' ? '✓ Aprobada' : 
+                             tarea.estado === 'rechazada' ? '✕ Rechazada' : 
+                             '⏳ Pendiente'}
+                          </span>
+                          <span className="text-xs font-bold text-gray-400">+{tarea.recompensa_xp} XP</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
         {/* COLUMNA DERECHA: Ranking (30%) */}
         <div className="lg:w-1/3 flex flex-col gap-6">
