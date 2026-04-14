@@ -5,13 +5,14 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  
   // Helper: cabeceras con token JWT para peticiones autenticadas
   const authHeaders = () => ({
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
+    'Authorization': `Bearer ${localStorage.getItem('tokenShelterDex')}`
   });
   const authHeadersJSON = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
+    'Authorization': `Bearer ${localStorage.getItem('tokenShelterDex')}`
   });
   const [animales, setAnimales] = useState([]);
   
@@ -19,6 +20,13 @@ function AdminDashboard() {
   const [animalSeleccionado, setAnimalSeleccionado] = useState(null); // Para borrar
   const [modalCrearAbierto, setModalCrearAbierto] = useState(false); // Para crear
   const [seccionActiva, setSeccionActiva] = useState('animales');
+  const [modalGaleriaAbierto, setModalGaleriaAbierto] = useState(false);
+  const [animalGaleria, setAnimalGaleria] = useState(null);
+  const [imagenesGaleria, setImagenesGaleria] = useState([]);
+  const [subiendoImagenes, setSubiendoImagenes] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('Todos');
+  const [filtroEspecie, setFiltroEspecie] = useState('Todos');
   const [tareasPendientes, setTareasPendientes] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
   const [solicitudesAdopcion, setSolicitudesAdopcion] = useState([]);
@@ -80,6 +88,132 @@ fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders(
 fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() })      .then(res => res.json())
       .then(datos => setEstadisticas(datos))
       .catch(error => console.error('Error cargando estadísticas:', error));
+  };
+
+  // --- FUNCIONES DE GALERÍA ---
+  const abrirGaleria = async (animal) => {
+    setAnimalGaleria(animal);
+    setModalGaleriaAbierto(true);
+    await cargarImagenesGaleria(animal.id);
+  };
+
+  const cargarImagenesGaleria = async (animalId) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/animales/${animalId}/imagenes`);
+      const datos = await res.json();
+      if (Array.isArray(datos)) setImagenesGaleria(datos);
+    } catch (error) {
+      console.error('Error cargando galería:', error);
+    }
+  };
+
+  const subirImagenes = async (e) => {
+    const archivos = e.target.files;
+    if (!archivos || archivos.length === 0) return;
+    setSubiendoImagenes(true);
+
+    const formData = new FormData();
+    for (let i = 0; i < archivos.length; i++) {
+      formData.append('imagenes', archivos[i]);
+    }
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/animales/${animalGaleria.id}/imagenes`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: formData
+      });
+      const datos = await res.json();
+
+      if (res.ok) {
+        toast.success(datos.mensaje, { icon: '📸' });
+        await cargarImagenesGaleria(animalGaleria.id);
+        // Refrescar lista de animales para que se actualice la portada
+        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const datosAnimales = await resAnimales.json();
+        setAnimales(datosAnimales);
+      } else {
+        toast.error(datos.error || 'Error al subir imágenes.');
+      }
+    } catch (error) {
+      toast.error('Error de conexión al subir imágenes.');
+    } finally {
+      setSubiendoImagenes(false);
+      e.target.value = ''; // Limpiar el input para poder subir de nuevo
+    }
+  };
+
+  const establecerPortada = async (idImagen) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/imagenes/${idImagen}/portada`, {
+        method: 'PUT',
+        headers: authHeaders()
+      });
+
+      if (res.ok) {
+        toast.success('Portada actualizada.', { icon: '⭐' });
+        await cargarImagenesGaleria(animalGaleria.id);
+        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const datosAnimales = await resAnimales.json();
+        setAnimales(datosAnimales);
+      }
+    } catch (error) {
+      toast.error('Error al cambiar la portada.');
+    }
+  };
+
+  const borrarImagen = async (idImagen) => {
+    if (!confirm('¿Seguro que quieres borrar esta imagen?')) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/imagenes/${idImagen}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+      });
+
+      if (res.ok) {
+        toast.success('Imagen eliminada.', { icon: '🗑️' });
+        await cargarImagenesGaleria(animalGaleria.id);
+        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const datosAnimales = await resAnimales.json();
+        setAnimales(datosAnimales);
+      }
+    } catch (error) {
+      toast.error('Error al borrar la imagen.');
+    }
+  };
+
+  const descargarInforme = async (tipo, filtro = 'Todos') => {
+    try {
+      const url = tipo === 'animales'
+        ? `http://localhost:3000/api/informes/animales?estado=${filtro}`
+        : 'http://localhost:3000/api/informes/voluntarios';
+
+      const respuesta = await fetch(url, { headers: authHeaders() });
+
+      if (!respuesta.ok) {
+        toast.error('Error al generar el informe.');
+        return;
+      }
+
+      // Convertir la respuesta en un archivo descargable
+      const blob = await respuesta.blob();
+      const urlArchivo = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = urlArchivo;
+      enlace.download = tipo === 'animales'
+        ? `informe_animales_${filtro.toLowerCase()}.pdf`
+        : 'informe_voluntarios.pdf';
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      URL.revokeObjectURL(urlArchivo);
+
+      toast.success('Informe descargado correctamente.', { icon: '📄' });
+
+    } catch (error) {
+      toast.error('Error de conexión al generar el informe.');
+    }
   };
 
   const cargarTareasPendientes = () => {
@@ -211,6 +345,15 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
     navigate('/login');
   };
 
+  // Filtrar animales según búsqueda y filtros
+  const animalesFiltrados = animales.filter(animal => {
+    const coincideBusqueda = animal.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                              animal.especie.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideEstado = filtroEstado === 'Todos' || animal.estado === filtroEstado;
+    const coincideEspecie = filtroEspecie === 'Todos' || animal.especie === filtroEspecie;
+    return coincideBusqueda && coincideEstado && coincideEspecie;
+  });
+
   return (
     <div className="container mx-auto p-4 max-w-6xl relative">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 sm:mb-8 bg-pokeDark text-white p-4 sm:p-6 rounded-xl border-4 border-pokeYellow shadow-[4px_4px_0px_0px_rgba(238,21,21,1)] mt-4 sm:mt-6">
@@ -240,60 +383,92 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
       </div>
 
       {/* PESTAÑAS DE NAVEGACIÓN */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-        <button
-          onClick={() => setSeccionActiva('animales')}
-          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap
-            seccionActiva === 'animales'
-              ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
-              : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
-          }`}
-        >
-          🐾 Animales
-        </button>
-        <button
-          onClick={() => setSeccionActiva('tareas')}
-          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors relative ${
-            seccionActiva === 'tareas'
-              ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
-              : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
-          }`}
-        >
-          📋 Validar Tareas
-          {tareasPendientes.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-pokeRed text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
-              {tareasPendientes.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => { setSeccionActiva('estadisticas'); cargarEstadisticas(); }}
-          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors ${
-            seccionActiva === 'estadisticas'
-              ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
-              : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
-          }`}
-        >
-          📊 Estadísticas
-        </button>
-        <button
-          onClick={() => { setSeccionActiva('adopciones'); cargarSolicitudesAdopcion(); }}
-          className={`font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors relative ${
-            seccionActiva === 'adopciones'
-              ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
-              : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
-          }`}
-        >
-          🏠 Adopciones
-          {solicitudesAdopcion.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-pokeRed text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
-              {solicitudesAdopcion.length}
-            </span>
-          )}
-        </button>
+      {/* PESTAÑAS DE NAVEGACIÓN */}
+      <div className="flex gap-1 sm:gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {[
+          { id: 'animales', icono: '🐾', texto: 'Animales', badge: 0 },
+          { id: 'tareas', icono: '📋', texto: 'Validar', badge: tareasPendientes.length },
+          { id: 'estadisticas', icono: '📊', texto: 'Stats', badge: 0 },
+          { id: 'adopciones', icono: '🏠', texto: 'Adopciones', badge: solicitudesAdopcion.length },
+          { id: 'informes', icono: '📄', texto: 'Informes', badge: 0 },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={(e) => {
+              setSeccionActiva(tab.id);
+              if (tab.id === 'estadisticas') cargarEstadisticas();
+              if (tab.id === 'adopciones') cargarSolicitudesAdopcion();
+              // Auto-scroll a la pestaña pulsada
+              e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }}
+            className={`font-retro text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors relative flex-shrink-0 ${
+              seccionActiva === tab.id
+                ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
+                : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            <span>{tab.icono}</span>
+            <span className="hidden sm:inline ml-1">{tab.texto}</span>
+            {tab.badge > 0 && (
+              <span className="absolute -top-2 -right-2 bg-pokeRed text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
     {seccionActiva === 'animales' && (<>
+    {/* BARRA DE BÚSQUEDA Y FILTROS */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            {/* Campo de búsqueda */}
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="🔍 Buscar por nombre o especie..."
+                className="w-full p-2 sm:p-3 border-4 border-pokeDark rounded-lg bg-white font-bold text-sm focus:outline-none focus:border-pokeBlue"
+              />
+              {busqueda && (
+                <button
+                  onClick={() => setBusqueda('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pokeRed font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Filtro por estado */}
+            <select
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+              className="p-2 sm:p-3 border-4 border-pokeDark rounded-lg bg-white font-bold text-sm focus:outline-none focus:border-pokeBlue"
+            >
+              <option value="Todos">Estado: Todos</option>
+              <option value="Refugio">Refugio</option>
+              <option value="Acogida">Acogida</option>
+              <option value="Adoptado">Adoptado</option>
+            </select>
+
+            {/* Filtro por especie */}
+            <select
+              value={filtroEspecie}
+              onChange={(e) => setFiltroEspecie(e.target.value)}
+              className="p-2 sm:p-3 border-4 border-pokeDark rounded-lg bg-white font-bold text-sm focus:outline-none focus:border-pokeBlue"
+            >
+              <option value="Todos">Especie: Todos</option>
+              <option value="Perro">Perro</option>
+              <option value="Gato">Gato</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          {/* Contador de resultados */}
+          <p className="text-xs font-bold text-gray-400 mb-2">
+            Mostrando {animalesFiltrados.length} de {animales.length} animales
+          </p>
       <div className="poke-card overflow-x-auto -mx-4 sm:mx-0 rounded-none sm:rounded-xl border-x-0 sm:border-x-4">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -306,7 +481,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
             </tr>
           </thead>
           <tbody className="font-bold">
-            {animales.map((animal) => (
+            {animalesFiltrados.map((animal) => (
               <tr key={animal.id} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
                 <td className="p-4 text-gray-500">#{animal.id}</td>
                 <td className="p-4 text-3xl">
@@ -323,6 +498,9 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                 </td>
                 <td className="p-4"><span className="bg-gray-200 px-2 py-1 rounded text-sm border-2 border-pokeDark uppercase">{animal.especie}</span></td>
                 <td className="p-4 flex justify-center gap-2">
+                  <button onClick={() => abrirGaleria(animal)} className="bg-purple-500 text-white px-3 py-1 rounded border-2 border-purple-700 hover:bg-purple-600 text-xs font-bold transition-colors">
+                      📸
+                  </button>
                   {/* CONECTAMOS EL BOTÓN DE EDITAR */}
                   <button 
                     onClick={() => abrirModalEditar(animal)} 
@@ -336,6 +514,17 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
             ))}
           </tbody>
         </table>
+        {animalesFiltrados.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500 font-bold">No se encontraron animales con esos filtros.</p>
+                <button
+                  onClick={() => { setBusqueda(''); setFiltroEstado('Todos'); setFiltroEspecie('Todos'); }}
+                  className="mt-2 text-pokeBlue font-bold text-sm hover:text-pokeRed underline"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+          )}
       </div>
 
       {/* MODAL BORRAR */}
@@ -459,6 +648,83 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                 Actualizar Ficha
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL GALERÍA DE IMÁGENES */}
+      {modalGaleriaAbierto && animalGaleria && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="poke-card p-4 sm:p-6 bg-white max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            
+            {/* Cabecera */}
+            <div className="flex justify-between items-center mb-6 border-b-4 border-pokeDark pb-4">
+              <div>
+                <h2 className="text-lg sm:text-2xl font-retro text-purple-600">Galería: {animalGaleria.nombre}</h2>
+                <p className="text-sm text-gray-500 font-bold">{imagenesGaleria.length} foto(s)</p>
+              </div>
+              <button onClick={() => setModalGaleriaAbierto(false)} className="text-3xl font-bold text-gray-500 hover:text-pokeRed">&times;</button>
+            </div>
+
+            {/* Subir imágenes */}
+            <div className="mb-6 bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+              <label className="block text-sm font-bold uppercase text-purple-700 mb-2">Subir nuevas fotos (máx. 5 a la vez)</label>
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                onChange={subirImagenes}
+                disabled={subiendoImagenes}
+                className="w-full p-2 border-4 border-pokeDark rounded bg-white font-bold text-sm file:mr-4 file:py-1 file:px-4 file:rounded file:border-2 file:border-pokeDark file:bg-pokeYellow file:font-bold file:text-pokeDark hover:file:bg-yellow-300 disabled:opacity-50"
+              />
+              {subiendoImagenes && <p className="text-sm text-purple-600 font-bold mt-2">Subiendo...</p>}
+            </div>
+
+            {/* Grid de imágenes */}
+            {imagenesGaleria.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-4xl mb-2">📷</p>
+                <p className="text-gray-500 font-bold">Este animal aún no tiene fotos.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {imagenesGaleria.map((img) => (
+                  <div key={img.id} className={`relative group rounded-lg overflow-hidden border-4 ${img.es_portada ? 'border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'border-gray-300'}`}>
+                    <img
+                      src={`http://localhost:3000${img.ruta}`}
+                      alt={`Foto de ${animalGaleria.nombre}`}
+                      className="w-full h-32 sm:h-40 object-cover"
+                    />
+                    
+                    {/* Badge de portada */}
+                    {img.es_portada && (
+                      <span className="absolute top-2 left-2 bg-yellow-400 text-pokeDark text-xs font-bold px-2 py-1 rounded border-2 border-pokeDark">
+                        ⭐ Portada
+                      </span>
+                    )}
+
+                    {/* Botones de acción (aparecen al hacer hover) */}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      {!img.es_portada && (
+                        <button
+                          onClick={() => establecerPortada(img.id)}
+                          className="bg-yellow-400 text-pokeDark font-bold text-xs px-3 py-2 rounded border-2 border-pokeDark hover:bg-yellow-300"
+                        >
+                          ⭐ Portada
+                        </button>
+                      )}
+                      <button
+                        onClick={() => borrarImagen(img.id)}
+                        className="bg-red-500 text-white font-bold text-xs px-3 py-2 rounded border-2 border-red-700 hover:bg-red-600"
+                      >
+                        🗑️ Borrar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
           </div>
         </div>
       )}
@@ -685,6 +951,68 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* SECCIÓN: INFORMES PDF */}
+      {seccionActiva === 'informes' && (
+        <div className="poke-card p-4 sm:p-6">
+          <h2 className="text-base sm:text-xl font-retro text-pokeDark mb-4 sm:mb-6 border-b-4 border-pokeDark pb-3">
+            Generación de Informes
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Informe de Animales */}
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">🐾</span>
+                <div>
+                  <h3 className="font-retro text-pokeDark">Informe de Animales</h3>
+                  <p className="text-sm text-gray-500 font-bold">Listado completo con estado, especie, estadísticas y datos de cada animal.</p>
+                </div>
+              </div>
+
+              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Filtrar por estado:</p>
+              <div className="flex flex-wrap gap-2">
+                {['Todos', 'Refugio', 'Acogida', 'Adoptado'].map((filtro) => (
+                  <button
+                    key={filtro}
+                    onClick={() => descargarInforme('animales', filtro)}
+                    className="bg-white font-bold text-sm py-2 px-4 rounded border-2 border-blue-300 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
+                  >
+                    📄 {filtro}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Informe de Voluntarios */}
+            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">👥</span>
+                <div>
+                  <h3 className="font-retro text-pokeDark">Informe de Voluntarios</h3>
+                  <p className="text-sm text-gray-500 font-bold">Ranking por XP, niveles alcanzados y resumen de tareas realizadas por cada voluntario.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => descargarInforme('voluntarios')}
+                className="bg-white font-bold text-sm py-2 px-4 rounded border-2 border-green-300 text-green-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors"
+              >
+                📄 Descargar Informe
+              </button>
+            </div>
+
+          </div>
+
+          {/* Nota informativa */}
+          <div className="mt-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <p className="text-sm text-gray-500 font-bold">
+              Los informes se generan en tiempo real desde la base de datos y se descargan en formato PDF.
+            </p>
+          </div>
         </div>
       )}
 
