@@ -203,6 +203,26 @@ app.put('/api/animales/:id', verificarToken, verificarAdmin, upload.single('imag
   }
 });
 
+// RUTA PÚBLICA: Estadísticas para la landing page (no requiere auth)
+app.get('/api/stats/publicas', async (req, res) => {
+  try {
+    const [animales] = await db.query('SELECT COUNT(*) AS total FROM animales');
+    const [adoptados] = await db.query("SELECT COUNT(*) AS total FROM animales WHERE estado = 'Adoptado'");
+    const [voluntarios] = await db.query("SELECT COUNT(*) AS total FROM usuarios WHERE rol = 'voluntario'");
+    const [tareas] = await db.query("SELECT COUNT(*) AS total FROM registro_tareas WHERE estado = 'aprobada'");
+
+    res.json({
+      totalAnimales: animales[0].total,
+      totalAdoptados: adoptados[0].total,
+      totalVoluntarios: voluntarios[0].total,
+      tareasCompletadas: tareas[0].total
+    });
+  } catch (error) {
+    console.error('Error stats públicas:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // ==========================================
 // RUTAS DE AUTENTICACIÓN (SEGURIDAD)
 // ==========================================

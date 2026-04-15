@@ -2,55 +2,52 @@ import { Link } from 'react-router-dom';
 
 function Cookies() {
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      
-      <div className="text-center mb-10 mt-6">
-        <h1 className="text-3xl font-retro text-pokeRed mb-4">Política de Cookies</h1>
-        <p className="text-lg font-bold text-gray-700">
-          Transparencia total sobre lo que guardamos en tu navegador.
-        </p>
-      </div>
-
-      <div className="poke-card p-6 md:p-10 bg-white text-gray-700 font-semibold space-y-8 text-justify">
-        
-        <section>
-          <h2 className="text-xl font-retro text-pokeDark mb-3 border-b-4 border-pokeLight pb-2">
-            ¿Qué son las cookies?
-          </h2>
-          <p>
-            Las cookies son pequeños archivos de texto que las páginas web guardan en tu ordenador o dispositivo móvil cuando las visitas. Sirven para que la página web funcione correctamente, para que sea más eficiente y para recordar tus preferencias (como tu sesión iniciada).
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-retro text-pokeDark mb-3 border-b-4 border-pokeLight pb-2">
-            ¿Qué tipo de cookies utilizamos?
-          </h2>
-          <p className="mb-4">En ShelterDex <strong>NO utilizamos cookies publicitarias ni de rastreo invasivo</strong>. Solo utilizamos las siguientes:</p>
-          
-          <div className="bg-pokeLight p-4 rounded border-2 border-pokeDark mb-4">
-            <h3 className="font-retro text-sm text-pokeBlue mb-2">Cookies Técnicas (Estrictamente Necesarias)</h3>
-            <p className="text-sm">
-              Son aquellas que permiten al usuario la navegación a través de la plataforma y la utilización de sus diferentes opciones, como controlar el tráfico y la comunicación de datos, o <strong>mantener la sesión iniciada</strong> de los voluntarios y administradores. Sin ellas, el sistema de gamificación y el panel de control no podrían funcionar.
-            </p>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-retro text-pokeDark mb-3 border-b-4 border-pokeLight pb-2">
-            ¿Cómo gestionar tus cookies?
-          </h2>
-          <p>
-            Puedes permitir, bloquear o eliminar las cookies instaladas en tu equipo mediante la configuración de las opciones del navegador instalado en tu ordenador. Ten en cuenta que si bloqueas las cookies técnicas, es posible que no puedas iniciar sesión en tu cuenta de voluntario.
-          </p>
-        </section>
-
-        <div className="mt-8 pt-6 border-t-4 border-pokeDark text-center font-bold">
-          <p>Si tienes dudas sobre el uso de cookies, contáctanos en nuestro <Link to="/soporte" className="text-pokeBlue hover:underline">Centro de Ayuda</Link>.</p>
+    <div>
+      <div className="bg-gradient-to-b from-pokeYellow/10 to-transparent">
+        <div className="container mx-auto px-4 pt-8 sm:pt-12 pb-6 max-w-3xl text-center">
+          <h1 className="text-2xl sm:text-4xl font-retro text-pokeDark mb-3">Política de Cookies</h1>
+          <p className="text-gray-500 font-bold">Transparencia total sobre lo que guardamos en tu navegador.</p>
         </div>
-
       </div>
 
+      <div className="container mx-auto px-4 pb-12 max-w-3xl">
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-5 sm:p-8 space-y-6 text-gray-600 font-semibold text-sm leading-relaxed">
+          
+          <section>
+            <h2 className="font-retro text-pokeDark mb-2">¿Qué son las cookies?</h2>
+            <p>Las cookies son pequeños archivos de texto que las páginas web guardan en tu dispositivo cuando las visitas. Sirven para que la web funcione correctamente y para recordar tus preferencias, como tu sesión iniciada.</p>
+          </section>
+
+          <section>
+            <h2 className="font-retro text-pokeDark mb-2">¿Qué tipo de cookies usamos?</h2>
+            <p className="mb-3">En ShelterDex <strong>NO usamos cookies publicitarias ni de rastreo</strong>. Solo usamos:</p>
+            
+            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+              <h3 className="font-retro text-green-700 text-xs mb-2">✅ Cookies Técnicas (Estrictamente Necesarias)</h3>
+              <p className="text-green-700">Permiten mantener la sesión iniciada de voluntarios y administradores. Sin ellas, el sistema de gamificación y el panel de control no podrían funcionar. Concretamente, almacenamos un token JWT en <code className="bg-green-100 px-1 rounded">localStorage</code>.</p>
+            </div>
+
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mt-3">
+              <h3 className="font-retro text-red-700 text-xs mb-2">🚫 Cookies que NO usamos</h3>
+              <div className="text-red-700 space-y-1">
+                <p>No usamos cookies de analítica (Google Analytics).</p>
+                <p>No usamos cookies publicitarias o de retargeting.</p>
+                <p>No usamos cookies de redes sociales.</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="font-retro text-pokeDark mb-2">¿Cómo gestionar tus cookies?</h2>
+            <p>Puedes bloquear o eliminar las cookies desde la configuración de tu navegador. Ten en cuenta que si bloqueas las cookies técnicas, no podrás iniciar sesión en tu cuenta.</p>
+          </section>
+
+          <div className="pt-4 border-t border-gray-200 text-center">
+            <p className="text-gray-400">¿Dudas? <Link to="/soporte" className="text-pokeRed hover:underline">Contacta con nosotros</Link>.</p>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }

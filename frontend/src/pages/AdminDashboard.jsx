@@ -358,31 +358,31 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
     <div className="container mx-auto p-4 max-w-6xl relative">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 sm:mb-8 bg-pokeDark text-white p-4 sm:p-6 rounded-xl border-4 border-pokeYellow shadow-[4px_4px_0px_0px_rgba(238,21,21,1)] mt-4 sm:mt-6">
         <div>
-          <h1 className="text-xl sm:text-3xl font-retro text-pokeLight mb-2">PC de Gestión (Admin)</h1>
-          <p className="font-bold text-pokeYellow">
-            Bienvenido, {localStorage.getItem('usuarioNombre') || 'Admin'} | Conectado a MySQL
+          <p className="text-xs font-bold text-pokeYellow/60 uppercase tracking-wider">Panel de Administración</p>
+          <h1 className="text-xl sm:text-3xl font-retro text-pokeLight">ShelterDex Admin</h1>
+          <p className="font-bold text-gray-400 text-sm mt-1">
+            👋 {localStorage.getItem('usuarioNombre') || 'Admin'} · {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
         
         {/* Contenedor de botones modificado para que siempre se vea */}
-        <div className="flex gap-2 sm:gap-4 mt-4 md:mt-0 w-full md:w-auto justify-center">
+        <div className="flex gap-2 sm:gap-3 mt-4 md:mt-0 w-full md:w-auto justify-center">
           <button 
             onClick={() => setModalCrearAbierto(true)} 
-            className="bg-pokeRed text-white font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded border-2 sm:border-4 border-white hover:bg-white hover:text-pokeRed transition-colors flex-1 md:flex-none"
+            className="bg-green-500 text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-3 rounded-lg border-2 border-green-400 hover:bg-green-400 hover:-translate-y-0.5 hover:shadow-lg transition-all flex-1 md:flex-none flex items-center justify-center gap-1"
           >
-            + Añadir Nuevo
+            <span>+</span> <span className="hidden sm:inline">Añadir</span> <span className="sm:hidden">Nuevo</span>
           </button>
           
           <button 
             onClick={handleCerrarSesion} 
-            className="bg-gray-500 text-white font-retro text-xs sm:text-sm px-3 sm:px-6 py-2 sm:py-3 rounded border-2 sm:border-4 border-white hover:bg-white hover:text-gray-800 transition-colors flex-1 md:flex-none"
+            className="bg-white/10 text-white/70 font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-3 rounded-lg border-2 border-white/20 hover:bg-white hover:text-pokeDark transition-all flex-1 md:flex-none"
           >
-            Cerrar Sesión
+            Salir
           </button>
         </div>
       </div>
 
-      {/* PESTAÑAS DE NAVEGACIÓN */}
       {/* PESTAÑAS DE NAVEGACIÓN */}
       <div className="flex gap-1 sm:gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
         {[
@@ -398,19 +398,18 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
               setSeccionActiva(tab.id);
               if (tab.id === 'estadisticas') cargarEstadisticas();
               if (tab.id === 'adopciones') cargarSolicitudesAdopcion();
-              // Auto-scroll a la pestaña pulsada
               e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }}
-            className={`font-retro text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 rounded-t border-2 sm:border-4 whitespace-nowrap transition-colors relative flex-shrink-0 ${
+            className={`font-bold text-xs sm:text-sm px-3 sm:px-5 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-all relative flex-shrink-0 flex items-center gap-1 sm:gap-2 ${
               seccionActiva === tab.id
-                ? 'bg-white border-pokeDark border-b-white text-pokeDark -mb-1 z-10'
-                : 'bg-gray-200 border-gray-300 text-gray-500 hover:bg-gray-100'
+                ? 'bg-pokeDark text-white shadow-[3px_3px_0px_0px_#222224]'
+                : 'bg-white text-gray-500 border-2 border-gray-200 hover:border-pokeDark hover:text-pokeDark'
             }`}
           >
             <span>{tab.icono}</span>
-            <span className="hidden sm:inline ml-1">{tab.texto}</span>
+            <span className="hidden sm:inline">{tab.texto}</span>
             {tab.badge > 0 && (
-              <span className="absolute -top-2 -right-2 bg-pokeRed text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+              <span className="bg-pokeRed text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white ml-1">
                 {tab.badge}
               </span>
             )}
@@ -472,22 +471,22 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
       <div className="poke-card overflow-x-auto -mx-4 sm:mx-0 rounded-none sm:rounded-xl border-x-0 sm:border-x-4">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-pokeLight border-b-4 border-pokeDark text-pokeDark font-retro text-xs md:text-sm">
-              <th className="p-4">ID</th>
-              <th className="p-4">Foto</th>
-              <th className="p-4">Nombre / Estado</th>
-              <th className="p-4">Especie</th>
-              <th className="p-4 text-center">Acciones</th>
+            <tr className="bg-pokeDark text-white font-retro text-xs">
+              <th className="p-3 sm:p-4">ID</th>
+              <th className="p-3 sm:p-4">Foto</th>
+              <th className="p-3 sm:p-4">Nombre / Estado</th>
+              <th className="p-3 sm:p-4">Especie</th>
+              <th className="p-3 sm:p-4 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody className="font-bold">
             {animalesFiltrados.map((animal) => (
-              <tr key={animal.id} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
-                <td className="p-4 text-gray-500">#{animal.id}</td>
-                <td className="p-4 text-3xl">
+              <tr key={animal.id} className="border-b-2 border-gray-200 hover:bg-pokeYellow/10 transition-colors group">
+                <td className="p-3 sm:p-4 text-gray-400 font-retro text-xs">#{animal.id}</td>
+                <td className="p-3 sm:p-4">
                   {animal.imagen 
-                    ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-12 h-12 object-cover rounded-lg border-2 border-pokeDark" />
-                    : animal.emoji
+                    ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-10 h-10 sm:w-14 sm:h-14 object-cover rounded-lg border-2 border-pokeDark group-hover:border-pokeYellow transition-colors" />
+                    : <span className="text-2xl sm:text-3xl">{animal.emoji}</span>
                   }
                 </td>
                 <td className="p-4">
@@ -497,18 +496,18 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                   </div>
                 </td>
                 <td className="p-4"><span className="bg-gray-200 px-2 py-1 rounded text-sm border-2 border-pokeDark uppercase">{animal.especie}</span></td>
-                <td className="p-4 flex justify-center gap-2">
-                  <button onClick={() => abrirGaleria(animal)} className="bg-purple-500 text-white px-3 py-1 rounded border-2 border-purple-700 hover:bg-purple-600 text-xs font-bold transition-colors">
+                <td className="p-3 sm:p-4">
+                  <div className="flex justify-center gap-1 sm:gap-2">
+                    <button onClick={() => abrirGaleria(animal)} className="bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-lg border-2 border-purple-200 hover:bg-purple-500 hover:text-white hover:border-purple-500 text-xs font-bold transition-all" title="Galería">
                       📸
-                  </button>
-                  {/* CONECTAMOS EL BOTÓN DE EDITAR */}
-                  <button 
-                    onClick={() => abrirModalEditar(animal)} 
-                    className="bg-pokeYellow text-pokeDark px-3 py-1 border-2 border-pokeDark rounded hover:bg-white transition-colors"
-                  >
-                    ✏️ Editar
-                  </button>
-                  <button onClick={() => abrirModalBorrar(animal)} className="bg-pokeRed text-white px-3 py-1 border-2 border-pokeDark rounded hover:bg-white hover:text-pokeRed transition-colors">🗑️ Borrar</button>
+                    </button>
+                    <button onClick={() => abrirModalEditar(animal)} className="bg-blue-100 text-blue-700 px-2 sm:px-3 py-1 rounded-lg border-2 border-blue-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 text-xs font-bold transition-all" title="Editar">
+                      ✏️
+                    </button>
+                    <button onClick={() => abrirModalBorrar(animal)} className="bg-red-100 text-red-700 px-2 sm:px-3 py-1 rounded-lg border-2 border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 text-xs font-bold transition-all" title="Borrar">
+                      🗑️
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -734,21 +733,22 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
 
       {/* SECCIÓN: VALIDACIÓN DE TAREAS */}
       {seccionActiva === 'tareas' && (
-        <div className="poke-card p-4 sm:p-6">
-          <h2 className="text-base sm:text-xl font-retro text-pokeDark mb-4 sm:mb-6 border-b-4 border-pokeDark pb-3">
-            Bandeja de Validación
-          </h2>
+        <div className="bg-white border-4 border-pokeDark rounded-xl p-4 sm:p-6 shadow-[4px_4px_0px_0px_#222224]">
+          <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-gray-200 pb-3">
+            <h2 className="text-base sm:text-xl font-retro text-pokeDark">📋 Bandeja de Validación</h2>
+            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{tareasPendientes.length} pendientes</span>
+          </div>
 
           {tareasPendientes.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-6xl mb-4">✅</p>
-              <p className="font-bold text-gray-500 text-lg">No hay tareas pendientes de revisión.</p>
-              <p className="text-sm text-gray-400 mt-2">Las solicitudes de los voluntarios aparecerán aquí.</p>
+              <p className="text-5xl mb-4">✅</p>
+              <p className="font-bold text-gray-500">Bandeja vacía — todo al día.</p>
+              <p className="text-sm text-gray-400 mt-2">Las solicitudes de los voluntarios aparecerán aquí automáticamente.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
               {tareasPendientes.map((tarea) => (
-                <div key={tarea.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                <div key={tarea.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl hover:shadow-md transition-shadow">
                   
                   {/* Info de la tarea */}
                   <div className="flex-1">
@@ -768,13 +768,13 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                   <div className="flex gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => revisarTarea(tarea.id, 'aprobada', tarea.voluntario)}
-                      className="flex-1 sm:flex-none bg-green-500 text-white font-bold py-2 px-5 rounded border-4 border-green-700 hover:bg-green-600 transition-colors"
+                      className="flex-1 sm:flex-none bg-green-500 text-white font-bold py-2 px-4 sm:px-5 rounded-lg border-2 border-green-600 hover:bg-green-600 hover:-translate-y-0.5 transition-all text-sm"
                     >
                       ✓ Aprobar
                     </button>
                     <button
                       onClick={() => revisarTarea(tarea.id, 'rechazada', tarea.voluntario)}
-                      className="flex-1 sm:flex-none bg-red-500 text-white font-bold py-2 px-5 rounded border-4 border-red-700 hover:bg-red-600 transition-colors"
+                      className="flex-1 sm:flex-none bg-white text-red-500 font-bold py-2 px-4 sm:px-5 rounded-lg border-2 border-red-300 hover:bg-red-500 hover:text-white hover:-translate-y-0.5 transition-all text-sm"
                     >
                       ✕ Rechazar
                     </button>
@@ -793,27 +793,27 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
 
           {/* TARJETAS KPI */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-            <div className="poke-card p-4 text-center">
+            <div className="bg-white rounded-xl p-4 border-2 border-blue-200 hover:border-blue-400 transition-colors">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Animales</p>
               <p className="text-xl sm:text-3xl font-retro text-pokeBlue">
                 {estadisticas.animalesPorEstado.reduce((sum, e) => sum + e.total, 0)}
               </p>
-              <p className="text-sm font-bold text-gray-500 uppercase mt-1">Animales Totales</p>
             </div>
-            <div className="poke-card p-4 text-center">
+            <div className="bg-white rounded-xl p-4 border-2 border-red-200 hover:border-red-400 transition-colors">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Voluntarios</p>
               <p className="text-xl sm:text-3xl font-retro text-pokeRed">{estadisticas.totalVoluntarios}</p>
-              <p className="text-sm font-bold text-gray-500 uppercase mt-1">Voluntarios</p>
             </div>
-            <div className="poke-card p-4 text-center">
+            <div className="bg-white rounded-xl p-4 border-2 border-green-200 hover:border-green-400 transition-colors">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Aprobadas</p>
               <p className="text-xl sm:text-3xl font-retro text-green-600">
                 {estadisticas.tareasPorEstado.find(t => t.estado === 'aprobada')?.total || 0}
               </p>
-              <p className="text-sm font-bold text-gray-500 uppercase mt-1">Tareas Aprobadas</p>
             </div>
-            <div className="poke-card p-4 text-center">
+            <div className="bg-white rounded-xl p-4 border-2 border-yellow-200 hover:border-yellow-400 transition-colors">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Pendientes</p>
               <p className="text-xl sm:text-3xl font-retro text-yellow-500">
                 {estadisticas.tareasPorEstado.find(t => t.estado === 'pendiente')?.total || 0}
               </p>
-              <p className="text-sm font-bold text-gray-500 uppercase mt-1">Pendientes</p>
             </div>
           </div>
 
@@ -894,10 +894,11 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
 
       {/* SECCIÓN: SOLICITUDES DE ADOPCIÓN */}
       {seccionActiva === 'adopciones' && (
-        <div className="poke-card p-4 sm:p-6">
-          <h2 className="text-base sm:text-xl font-retro text-pokeDark mb-4 sm:mb-6 border-b-4 border-pokeDark pb-3">
-            Solicitudes de Adopción
-          </h2>
+        <div className="bg-white border-4 border-pokeDark rounded-xl p-4 sm:p-6 shadow-[4px_4px_0px_0px_#222224]">
+          <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-gray-200 pb-3">
+            <h2 className="text-base sm:text-xl font-retro text-pokeDark">🏠 Solicitudes de Adopción</h2>
+            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{solicitudesAdopcion.length} pendientes</span>
+          </div>
 
           {solicitudesAdopcion.length === 0 ? (
             <div className="text-center py-12">
@@ -908,7 +909,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
           ) : (
             <div className="flex flex-col gap-4">
               {solicitudesAdopcion.map((sol) => (
-                <div key={sol.id} className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+                <div key={sol.id} className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-4 hover:shadow-md transition-shadow">
                   
                   {/* Cabecera */}
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
@@ -935,13 +936,13 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                   <div className="flex gap-2">
                     <button
                       onClick={() => revisarAdopcion(sol.id, 'aprobada', sol.animal)}
-                      className="flex-1 sm:flex-none bg-green-500 text-white font-bold py-2 px-5 rounded border-4 border-green-700 hover:bg-green-600 transition-colors"
+                      className="flex-1 sm:flex-none bg-green-500 text-white font-bold py-2 px-4 sm:px-5 rounded-lg border-2 border-green-600 hover:bg-green-600 hover:-translate-y-0.5 transition-all text-sm"
                     >
-                      ✓ Aprobar Adopción
+                      ✓ Aprobar
                     </button>
                     <button
                       onClick={() => revisarAdopcion(sol.id, 'rechazada', sol.animal)}
-                      className="flex-1 sm:flex-none bg-red-500 text-white font-bold py-2 px-5 rounded border-4 border-red-700 hover:bg-red-600 transition-colors"
+                      className="flex-1 sm:flex-none bg-white text-red-500 font-bold py-2 px-4 sm:px-5 rounded-lg border-2 border-red-300 hover:bg-red-500 hover:text-white hover:-translate-y-0.5 transition-all text-sm"
                     >
                       ✕ Rechazar
                     </button>
@@ -956,10 +957,11 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
 
       {/* SECCIÓN: INFORMES PDF */}
       {seccionActiva === 'informes' && (
-        <div className="poke-card p-4 sm:p-6">
-          <h2 className="text-base sm:text-xl font-retro text-pokeDark mb-4 sm:mb-6 border-b-4 border-pokeDark pb-3">
-            Generación de Informes
-          </h2>
+        <div className="bg-white border-4 border-pokeDark rounded-xl p-4 sm:p-6 shadow-[4px_4px_0px_0px_#222224]">
+          <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-gray-200 pb-3">
+            <h2 className="text-base sm:text-xl font-retro text-pokeDark">📄 Generación de Informes</h2>
+            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">PDF en tiempo real</span>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
