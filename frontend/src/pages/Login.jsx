@@ -4,45 +4,27 @@ import { toast } from 'react-hot-toast';
 
 function Login() {
   const navigate = useNavigate();
-  
-  // Estado para alternar entre "Iniciar Sesión" y "Crear Cuenta"
   const [esRegistro, setEsRegistro] = useState(false);
-  
-  // Estados para guardar lo que escribe el usuario
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-    
-    // ==========================================
-    // VALIDACIÓN DE SEGURIDAD (Solo en Registro)
-    // ==========================================
+    if (cargando) return;
+
     if (esRegistro) {
-      // Expresión regular: Mínimo 8 caracteres, al menos una letra y un número
       const regexPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-      
       if (!regexPassword.test(password)) {
-        toast.error('Contraseña débil: Usa mínimo 8 caracteres, combinando letras y números.', {
-          icon: '🛡️',
-          duration: 5000,
-          style: { border: '4px solid #EE1515' } // Borde rojo para que destaque
-        });
-        return; // Detenemos la función para no enviar basura al servidor
+        toast.error('Contraseña débil: Usa mínimo 8 caracteres, combinando letras y números.', { icon: '🛡️', duration: 5000 });
+        return;
       }
     }
 
-    // ==========================================
-    // PETICIÓN AL SERVIDOR
-    // ==========================================
-    const url = esRegistro 
-      ? 'http://localhost:3000/api/registro' 
-      : 'http://localhost:3000/api/login';
-      
-    const payload = esRegistro 
-      ? { nombre, email, password } 
-      : { email, password };
+    setCargando(true);
+    const url = esRegistro ? 'http://localhost:3000/api/registro' : 'http://localhost:3000/api/login';
+    const payload = esRegistro ? { nombre, email, password } : { email, password };
 
     try {
       const respuesta = await fetch(url, {
@@ -50,68 +32,89 @@ function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
       const datos = await respuesta.json();
 
-      if (!respuesta.ok) {
-        // Si el backend nos da un error (ej: email repetido o mala contraseña)
-        toast.error(datos.error || 'Hubo un problema');
-        return;
-      }
+      if (!respuesta.ok) { toast.error(datos.error || 'Hubo un problema'); return; }
 
-      // SI TODO HA IDO BIEN:
       if (esRegistro) {
         toast.success('Cuenta creada con éxito. Ahora inicia sesión.');
-        setEsRegistro(false); 
-        setPassword(''); 
+        setEsRegistro(false); setPassword('');
       } else {
-        // ES LOGIN: Guardamos todos los datos de sesión
         localStorage.setItem('tokenShelterDex', datos.token);
         localStorage.setItem('usuarioNombre', datos.usuario.nombre);
-        localStorage.setItem('usuarioRol', datos.usuario.rol); // NUEVO: Guardamos el rol
+        localStorage.setItem('usuarioRol', datos.usuario.rol);
         localStorage.setItem('usuarioId', datos.usuario.id);
-        
         toast.success(`Bienvenido de nuevo, ${datos.usuario.nombre}`);
-        
-        // Redirección condicional basada en el rol
-        if (datos.usuario.rol === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard'); // Los voluntarios van a su propio panel
-        }
+        navigate(datos.usuario.rol === 'admin' ? '/admin' : '/dashboard');
       }
-
     } catch (error) {
-      console.error('Error de red:', error);
       toast.error('No se pudo conectar con el servidor. ¿Está encendido?');
+    } finally {
+      setCargando(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-4 flex justify-center items-center min-h-[75vh]">
-      <div className="poke-card p-6 w-full max-w-md bg-pokeRed relative transition-all duration-500">
-        
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-pokeBlue border-4 border-pokeDark rounded-full shadow-[inset_-3px_-3px_0px_rgba(0,0,0,0.3)]"></div>
-          <div className="w-4 h-4 bg-pokeYellow border-2 border-pokeDark rounded-full"></div>
-          <div className="w-4 h-4 bg-green-500 border-2 border-pokeDark rounded-full"></div>
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+
+        {/* Pokéball Header */}
+        <div className="bg-pokeRed rounded-t-2xl border-4 border-b-0 border-pokeDark p-4 sm:p-6 relative overflow-hidden">
+          {/* Línea central de la Pokéball */}
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-pokeDark"></div>
+          
+          {/* LEDs decorativos */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-pokeBlue border-4 border-pokeDark rounded-full shadow-[inset_-3px_-3px_0px_rgba(0,0,0,0.3)] relative">
+              <div className="absolute top-1 left-1 w-3 h-3 bg-white/40 rounded-full"></div>
+            </div>
+            <div className="w-3 h-3 bg-pokeYellow border-2 border-pokeDark rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 border-2 border-pokeDark rounded-full"></div>
+          </div>
+
+          {/* Título */}
+          <h1 className="text-xl sm:text-2xl font-retro text-white">
+            {esRegistro ? 'Nuevo Entrenador' : 'Acceso al Sistema'}
+          </h1>
+          <p className="text-white/60 font-bold text-sm mt-1">
+            {esRegistro ? 'Únete a la comunidad de voluntarios' : 'Identifícate para continuar'}
+          </p>
         </div>
 
-        <div className="bg-pokeLight border-4 border-pokeDark rounded-lg p-6 shadow-[inset_3px_3px_0px_rgba(0,0,0,0.1)]">
-          <h2 className="text-2xl font-retro text-pokeDark mb-6 text-center">
-            {esRegistro ? 'Nuevo Entrenador' : 'Acceso al Sistema'}
-          </h2>
+        {/* Formulario (parte blanca de la Pokéball) */}
+        <div className="bg-white rounded-b-2xl border-4 border-t-0 border-pokeDark p-5 sm:p-8 shadow-[4px_4px_0px_0px_#222224]">
           
+          {/* Toggle Login/Registro */}
+          <div className="flex gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => setEsRegistro(false)}
+              className={`flex-1 font-bold py-2 text-sm rounded-lg border-2 transition-all ${
+                !esRegistro ? 'bg-pokeDark text-white border-pokeDark' : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-400'
+              }`}
+            >
+              Iniciar Sesión
+            </button>
+            <button
+              type="button"
+              onClick={() => setEsRegistro(true)}
+              className={`flex-1 font-bold py-2 text-sm rounded-lg border-2 transition-all ${
+                esRegistro ? 'bg-pokeDark text-white border-pokeDark' : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-400'
+              }`}
+            >
+              Crear Cuenta
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4 font-bold">
             
             {esRegistro && (
               <div>
-                <label className="block text-pokeDark mb-1 text-sm uppercase">Tu Nombre:</label>
+                <label className="block text-gray-500 mb-1 text-xs uppercase">Tu Nombre</label>
                 <input 
-                  type="text" 
-                  value={nombre}
+                  type="text" value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full p-2 border-4 border-pokeDark rounded bg-white focus:outline-none focus:border-pokeBlue"
+                  className="w-full p-3 border-4 border-gray-200 rounded-lg bg-white focus:outline-none focus:border-pokeDark transition-colors"
                   placeholder="Ash Ketchum"
                   required={esRegistro}
                 />
@@ -119,51 +122,46 @@ function Login() {
             )}
             
             <div>
-              <label className="block text-pokeDark mb-1 text-sm uppercase">Email:</label>
+              <label className="block text-gray-500 mb-1 text-xs uppercase">Email</label>
               <input 
-                type="email" 
-                value={email}
+                type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border-4 border-pokeDark rounded bg-white focus:outline-none focus:border-pokeBlue"
+                className="w-full p-3 border-4 border-gray-200 rounded-lg bg-white focus:outline-none focus:border-pokeDark transition-colors"
                 placeholder="ash@pueblopaleta.com"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-pokeDark mb-1 text-sm uppercase">Contraseña:</label>
+              <label className="block text-gray-500 mb-1 text-xs uppercase">Contraseña</label>
               <input 
-                type="password" 
-                value={password}
+                type="password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border-4 border-pokeDark rounded bg-white focus:outline-none focus:border-pokeBlue"
+                className="w-full p-3 border-4 border-gray-200 rounded-lg bg-white focus:outline-none focus:border-pokeDark transition-colors"
                 placeholder="••••••••"
                 required
               />
+              {esRegistro && (
+                <p className="text-xs text-gray-400 mt-1">Mínimo 8 caracteres, combinando letras y números.</p>
+              )}
             </div>
 
             <button 
-              type="submit" 
-              className="w-full mt-4 bg-pokeYellow text-pokeDark font-retro py-3 rounded border-4 border-pokeDark hover:bg-white hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all"
+              type="submit" disabled={cargando}
+              className="w-full bg-pokeRed text-white font-retro py-3 sm:py-4 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              {esRegistro ? 'Registrarme' : 'Entrar'}
+              {cargando ? 'Cargando...' : esRegistro ? 'Crear mi Cuenta' : 'Entrar'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm font-bold border-t-2 border-pokeDark/20 pt-4">
-            <p className="mb-2 text-gray-600">
-              {esRegistro ? '¿Ya tienes una cuenta?' : '¿Eres un nuevo voluntario?'}
-            </p>
-            <button 
-              onClick={() => setEsRegistro(!esRegistro)}
-              className="text-pokeBlue hover:text-pokeRed transition-colors underline"
-              type="button"
-            >
-              {esRegistro ? 'Ir a Iniciar Sesión' : 'Crear una cuenta nueva'}
-            </button>
+          {/* Links adicionales */}
+          <div className="mt-6 pt-4 border-t-2 border-gray-100 text-center">
+            <Link to="/" className="text-sm font-bold text-gray-400 hover:text-pokeDark transition-colors">
+              ← Volver al inicio
+            </Link>
           </div>
-          
         </div>
+
       </div>
     </div>
   );

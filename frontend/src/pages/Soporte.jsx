@@ -1,123 +1,79 @@
 import { useState } from 'react';
 
 function Soporte() {
-  const [mensajeEnviado, setMensajeEnviado] = useState(false);
+  const [enviado, setEnviado] = useState(false);
 
   const enviarTicket = (e) => {
-    e.preventDefault(); // Evita que la web se recargue
-    setMensajeEnviado(true);
-    
-    // Ocultamos el mensaje de éxito después de 5 segundos
-    setTimeout(() => {
-      setMensajeEnviado(false);
-    }, 5000);
+    e.preventDefault();
+    setEnviado(true);
+    setTimeout(() => setEnviado(false), 5000);
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      
-      <div className="text-center mb-10 mt-6">
-        <h1 className="text-3xl font-retro text-pokeRed mb-4">Centro de Ayuda</h1>
-        <p className="text-lg font-bold text-gray-700">
-          ¿Problemas con el sistema? Nuestro equipo está listo para asistirte.
-        </p>
+    <div>
+      <div className="bg-gradient-to-b from-pokeBlue/10 to-transparent">
+        <div className="container mx-auto px-4 pt-8 sm:pt-12 pb-6 max-w-4xl text-center">
+          <h1 className="text-2xl sm:text-4xl font-retro text-pokeDark mb-3">Centro de Ayuda</h1>
+          <p className="text-gray-500 font-bold">¿Problemas con el sistema? Estamos aquí para ayudarte.</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Columna Izquierda: Información de Contacto */}
-        <div className="poke-card p-6 bg-pokeBlue text-white relative overflow-hidden">
-          <h2 className="text-xl font-retro text-pokeYellow mb-6 drop-shadow-[2px_2px_0px_#222224]">
-            Contacto Directo
-          </h2>
-          
-          <div className="space-y-6 font-bold text-lg">
-            <div className="flex items-center gap-4">
-              <span className="text-3xl bg-white text-pokeDark w-12 h-12 flex items-center justify-center rounded-full border-4 border-pokeDark shadow-[2px_2px_0px_0px_#222224]">
-                📞
-              </span>
-              <div>
-                <p className="text-sm text-pokeLight uppercase">Teléfono Gratuito</p>
-                <p className="tracking-wider">+34 900 123 456</p>
-              </div>
-            </div>
+      <div className="container mx-auto px-4 pb-12 max-w-4xl">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-            <div className="flex items-center gap-4">
-              <span className="text-3xl bg-white text-pokeDark w-12 h-12 flex items-center justify-center rounded-full border-4 border-pokeDark shadow-[2px_2px_0px_0px_#222224]">
-                ✉️
-              </span>
-              <div>
-                <p className="text-sm text-pokeLight uppercase">Correo Electrónico</p>
-                <p className="tracking-wider">ayuda@shelterdex.es</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <span className="text-3xl bg-white text-pokeDark w-12 h-12 flex items-center justify-center rounded-full border-4 border-pokeDark shadow-[2px_2px_0px_0px_#222224]">
-                ⏰
-              </span>
-              <div>
-                <p className="text-sm text-pokeLight uppercase">Horario de Atención</p>
-                <p className="tracking-wider">Lunes a Viernes, 09:00 - 18:00</p>
-              </div>
+          {/* Info de contacto */}
+          <div className="lg:col-span-2 bg-pokeDark rounded-xl p-5 sm:p-6 text-white">
+            <h2 className="font-retro text-pokeYellow mb-6">Contacto Directo</h2>
+            <div className="space-y-5">
+              {[
+                { icono: '📞', label: 'Teléfono', valor: '+34 900 123 456' },
+                { icono: '✉️', label: 'Email', valor: 'ayuda@shelterdex.es' },
+                { icono: '⏰', label: 'Horario', valor: 'L-V, 09:00 - 18:00' },
+                { icono: '📍', label: 'Ubicación', valor: 'Málaga, España' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-2xl w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">{item.icono}</span>
+                  <div>
+                    <p className="text-xs text-gray-400 uppercase font-bold">{item.label}</p>
+                    <p className="font-bold text-sm">{item.valor}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Formulario */}
+          <div className="lg:col-span-3 bg-white border-2 border-gray-200 rounded-xl p-5 sm:p-6">
+            <h2 className="font-retro text-pokeDark mb-5">Enviar Ticket</h2>
+            
+            {enviado ? (
+              <div className="text-center py-8">
+                <p className="text-4xl mb-3">✅</p>
+                <p className="font-bold text-green-700 mb-1">¡Incidencia recibida!</p>
+                <p className="text-sm text-gray-500 font-bold">Te responderemos en un plazo máximo de 24 horas.</p>
+              </div>
+            ) : (
+              <form onSubmit={enviarTicket} className="space-y-4 font-bold text-sm">
+                <div>
+                  <label className="block text-gray-500 mb-1 text-xs uppercase">Nombre / Refugio</label>
+                  <input type="text" required placeholder="Ej: Refugio La Esperanza" className="w-full p-3 border-4 border-gray-200 rounded-lg focus:border-pokeDark focus:outline-none transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-gray-500 mb-1 text-xs uppercase">Email de contacto</label>
+                  <input type="email" required placeholder="ejemplo@correo.com" className="w-full p-3 border-4 border-gray-200 rounded-lg focus:border-pokeDark focus:outline-none transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-gray-500 mb-1 text-xs uppercase">Describe la incidencia</label>
+                  <textarea rows="4" required placeholder="Explica detalladamente tu problema..." className="w-full p-3 border-4 border-gray-200 rounded-lg focus:border-pokeDark focus:outline-none transition-colors"></textarea>
+                </div>
+                <button type="submit" className="w-full bg-pokeRed text-white font-retro py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-all">
+                  Enviar Mensaje
+                </button>
+              </form>
+            )}
+          </div>
+
         </div>
-
-        {/* Columna Derecha: Formulario de Incidencias */}
-        <div className="poke-card p-6">
-          <h2 className="text-xl font-retro text-pokeDark mb-6">Enviar Ticket</h2>
-          
-          {mensajeEnviado ? (
-            <div className="bg-green-100 border-4 border-green-500 text-green-800 p-6 rounded-lg text-center font-bold">
-              <p className="text-3xl mb-2">✅</p>
-              <p>¡Incidencia recibida correctamente!</p>
-              <p className="text-sm mt-2 font-normal">Te responderemos a tu correo en un plazo máximo de 24 horas.</p>
-            </div>
-          ) : (
-            <form onSubmit={enviarTicket} className="space-y-4 font-bold">
-              
-              <div>
-                <label className="block text-pokeDark mb-1 text-sm uppercase">Tu Nombre / Refugio</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border-4 border-pokeDark rounded bg-pokeLight focus:bg-white focus:outline-none transition-colors"
-                  placeholder="Ej: Refugio La Esperanza"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-pokeDark mb-1 text-sm uppercase">Correo de contacto</label>
-                <input 
-                  type="email" 
-                  className="w-full p-2 border-4 border-pokeDark rounded bg-pokeLight focus:bg-white focus:outline-none transition-colors"
-                  placeholder="ejemplo@correo.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-pokeDark mb-1 text-sm uppercase">Describe la incidencia</label>
-                <textarea 
-                  className="w-full p-2 border-4 border-pokeDark rounded bg-pokeLight focus:bg-white focus:outline-none transition-colors"
-                  rows="4"
-                  placeholder="Explica detalladamente tu problema..."
-                  required
-                ></textarea>
-              </div>
-
-              <button 
-                type="submit" 
-                className="w-full bg-pokeRed text-white font-retro py-3 rounded border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-colors"
-              >
-                Enviar Mensaje
-              </button>
-
-            </form>
-          )}
-        </div>
-
       </div>
     </div>
   );
