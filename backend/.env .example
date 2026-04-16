@@ -1,0 +1,12 @@
+# Plantilla de variables de entorno del backend
+# Copia este archivo a .env y rellena los valores reales
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=shelterdex_db
+PORT=3000
+JWT_SECRET=genera_un_secret_largo_y_aleatorio
+FRONTEND_URL=http://localhost:5173
+PAYPAL_CLIENT_ID=tu_paypal_client_id_aqui
+PAYPAL_CLIENT_SECRET=tu_paypal_client_secret_aqui
+PAYPAL_ENVIRONMENT=sandbox

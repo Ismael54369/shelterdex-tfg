@@ -3,6 +3,36 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
+// Componente auxiliar: slider de estadística 0-100 con valor visible.
+// Declarado fuera del componente padre para evitar re-crearlo en cada render
+// (si se recreara, el slider perdería el foco y el estado local al teclear).
+function SliderStat({ nombre, campo, valorInicial, color, icono }) {
+  const [valor, setValor] = useState(Number(valorInicial) || 50);
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-1">
+        <label className="text-sm uppercase font-bold text-pokeDark">
+          {icono} {nombre}
+        </label>
+        <span className="font-retro text-pokeDark text-sm">{valor}/100</span>
+      </div>
+      <input
+        type="range"
+        name={campo}
+        min="0"
+        max="100"
+        value={valor}
+        onChange={(e) => setValor(Number(e.target.value))}
+        className="w-full h-2 accent-pokeDark cursor-pointer"
+      />
+      <div className="w-full bg-gray-200 rounded-full h-2 mt-1 overflow-hidden border-2 border-pokeDark">
+        <div className={`${color} h-full transition-all`} style={{ width: `${valor}%` }}></div>
+      </div>
+    </div>
+  );
+}
+
 function AdminDashboard() {
   const navigate = useNavigate();
   
@@ -66,11 +96,24 @@ fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders(
 
       if (respuesta.ok) {
         if (estado === 'aprobada') {
-          toast.success(datos.mensaje, { icon: '🏠', duration: 5000 });
-          // Refrescar animales para que el estado cambie en la tabla
-          fetch('http://localhost:3000/api/animales')
-            .then(res => res.json())
-            .then(datos => setAnimales(datos));
+          toast.success(
+            `Tarea aprobada. ${voluntario} ha recibido +${datos.xp_otorgada} XP (Total: ${datos.nueva_xp_total} XP, Nivel ${datos.nuevo_nivel})`,
+            { icon: '✅', duration: 5000 }
+          );
+          // Feedback secundario: efecto sobre las stats del animal
+          if (datos.stats_animal && (datos.efecto_energia !== 0 || datos.efecto_sociabilidad !== 0)) {
+            const signoEnergia = datos.efecto_energia >= 0 ? '+' : '';
+            const signoSoc = datos.efecto_sociabilidad >= 0 ? '+' : '';
+            toast(
+              `Stats del animal: ⚡${signoEnergia}${datos.efecto_energia} (ahora ${datos.stats_animal.energia}/100) · 💙${signoSoc}${datos.efecto_sociabilidad} (ahora ${datos.stats_animal.sociabilidad}/100)`,
+              { icon: '📊', duration: 5000 }
+            );
+          }
+          // Recargar también los animales para que el admin vea los cambios en la tabla
+          const resAnimales = await fetch('http://localhost:3000/api/animales');
+          if (resAnimales.ok) {
+            setAnimales(await resAnimales.json());
+          }
         } else {
           toast('Solicitud rechazada.', { icon: '❌' });
         }
@@ -307,9 +350,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
     e.preventDefault();
     const formData = new FormData(e.target);
     
-    // Añadimos los campos numéricos que el formulario básico no incluye
-    formData.set('energia', animalAEditar.energia);
-    formData.set('sociabilidad', animalAEditar.sociabilidad);
+    // Emoji se mantiene (no se edita en este formulario)
     formData.set('emoji', animalAEditar.emoji);
     
     // Si el animal ya tenía imagen y no se sube una nueva, mandamos la ruta existente
@@ -562,6 +603,13 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                 <div><label className="block text-sm uppercase mb-1">Peso</label><input type="text" name="peso" required className="w-full p-2 border-4 border-pokeDark rounded bg-pokeLight" /></div>
                 <div><label className="block text-sm uppercase mb-1">Emoji</label><input type="text" name="emoji" defaultValue="🐾" maxLength="2" className="w-full p-2 border-4 border-pokeDark rounded bg-pokeLight text-center text-xl" /></div>
               </div>
+
+              {/* Estadísticas iniciales (Opción C: admin las ajusta al alta) */}
+              <div className="bg-pokeLight border-4 border-pokeDark rounded-lg p-4 space-y-4">
+                <p className="text-xs uppercase text-pokeDark font-bold">Estadísticas iniciales</p>
+                <SliderStat nombre="Energía" campo="energia" valorInicial={50} color="bg-pokeYellow" icono="⚡" />
+                <SliderStat nombre="Sociabilidad" campo="sociabilidad" valorInicial={50} color="bg-pokeBlue" icono="💙" />
+              </div>
               <div className="col-span-full">
                   <label className="block text-sm uppercase mb-1">Foto del Animal</label>
                   <input 
@@ -618,6 +666,16 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                   <label className="block text-sm uppercase mb-1">Peso</label>
                   <input type="text" name="peso" defaultValue={animalAEditar.peso} required className="w-full p-2 border-4 border-pokeDark rounded bg-pokeLight" />
                 </div>
+              </div>
+
+              {/* Estadísticas editables (Opción C: el admin puede ajustar manualmente) */}
+              <div className="bg-pokeLight border-4 border-pokeDark rounded-lg p-4 space-y-4">
+                <p className="text-xs uppercase text-pokeDark font-bold">Estadísticas del animal</p>
+                <SliderStat nombre="Energía" campo="energia" valorInicial={animalAEditar.energia} color="bg-pokeYellow" icono="⚡" />
+                <SliderStat nombre="Sociabilidad" campo="sociabilidad" valorInicial={animalAEditar.sociabilidad} color="bg-pokeBlue" icono="💙" />
+                <p className="text-xs text-gray-500 italic">
+                  ℹ️ Estas estadísticas también se modifican automáticamente cuando un voluntario completa una tarea aprobada.
+                </p>
               </div>
               <div className="col-span-full">
                   <label className="block text-sm uppercase mb-1">Foto del Animal</label>
