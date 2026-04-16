@@ -1,0 +1,4 @@
+# Plantilla de variables de entorno del frontend
+# Copia este archivo a .env y rellena los valores reales
+VITE_API_URL=http://localhost:3000
+VITE_PAYPAL_CLIENT_ID=tu_paypal_client_id_aqui

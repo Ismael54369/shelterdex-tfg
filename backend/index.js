@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
 import PDFDocument from 'pdfkit';
+import { Client, Environment, OrdersController } from '@paypal/paypal-server-sdk';
 
 const app = express();
 
@@ -45,6 +46,32 @@ const upload = multer({
   fileFilter: filtroImagenes,
   limits: { fileSize: 5 * 1024 * 1024 } // Máximo 5MB
 });
+
+// ==========================================
+// CLIENTE PAYPAL (SDK oficial)
+// ==========================================
+// Lee credenciales desde .env. Si faltan, el servidor arranca igual
+// pero los endpoints de PayPal devolverán error — esto permite desarrollar
+// otras partes sin tener que configurar PayPal aún.
+const paypalClient = (process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET)
+  ? new Client({
+      clientCredentialsAuthCredentials: {
+        oAuthClientId: process.env.PAYPAL_CLIENT_ID,
+        oAuthClientSecret: process.env.PAYPAL_CLIENT_SECRET,
+      },
+      environment: process.env.PAYPAL_ENVIRONMENT === 'live' 
+        ? Environment.Production 
+        : Environment.Sandbox,
+    })
+  : null;
+
+const paypalOrdersController = paypalClient ? new OrdersController(paypalClient) : null;
+
+if (!paypalClient) {
+  console.warn('[PayPal] Credenciales no configuradas. Los endpoints /api/paypal/* devolverán 503.');
+} else {
+  console.log(`[PayPal] Cliente inicializado en modo ${process.env.PAYPAL_ENVIRONMENT || 'sandbox'}.`);
+}
 
 // ==========================================
 // MIDDLEWARES DE SEGURIDAD (JWT)
@@ -386,9 +413,15 @@ app.put('/api/tareas/revisar/:id', verificarToken, verificarAdmin, async (req, r
       return res.status(400).json({ error: 'Estado inválido. Usa "aprobada" o "rechazada".' });
     }
 
-    // 1. Obtener los datos del registro
+    // 1. Obtener los datos del registro (con efectos y animal_id)
     const [registros] = await db.query(`
-      SELECT rt.usuario_id, rt.estado AS estado_actual, ct.recompensa_xp
+      SELECT 
+        rt.usuario_id, 
+        rt.animal_id,
+        rt.estado AS estado_actual, 
+        ct.recompensa_xp,
+        ct.efecto_energia,
+        ct.efecto_sociabilidad
       FROM registro_tareas rt
       JOIN catalogo_tareas ct ON rt.tarea_id = ct.id
       WHERE rt.id = ?
@@ -408,7 +441,7 @@ app.put('/api/tareas/revisar/:id', verificarToken, verificarAdmin, async (req, r
     // 2. Actualizar el estado del registro
     await db.query('UPDATE registro_tareas SET estado = ? WHERE id = ?', [estado, idRegistro]);
 
-    // 3. Si se APRUEBA → sumar XP y recalcular nivel
+    // 3. Si se APRUEBA → sumar XP, recalcular nivel Y modificar stats del animal
     if (estado === 'aprobada') {
       const [usuarios] = await db.query('SELECT xp, nivel FROM usuarios WHERE id = ?', [registro.usuario_id]);
       
@@ -419,11 +452,37 @@ app.put('/api/tareas/revisar/:id', verificarToken, verificarAdmin, async (req, r
 
       await db.query('UPDATE usuarios SET xp = ?, nivel = ? WHERE id = ?', [nuevaXp, nuevoNivel, registro.usuario_id]);
 
+      // --- NUEVO: aplicar efectos al animal con CLAMP [0, 100] ---
+      // Se hace en una sola query con GREATEST/LEAST para evitar race conditions
+      // y para que la BD garantice que nunca se salen del rango válido.
+      let statsAnimal = null;
+      if (registro.animal_id && (registro.efecto_energia !== 0 || registro.efecto_sociabilidad !== 0)) {
+        await db.query(`
+          UPDATE animales 
+          SET 
+            energia = GREATEST(0, LEAST(100, energia + ?)),
+            sociabilidad = GREATEST(0, LEAST(100, sociabilidad + ?))
+          WHERE id = ?
+        `, [registro.efecto_energia, registro.efecto_sociabilidad, registro.animal_id]);
+
+        // Leer valores finales para devolverlos en la respuesta
+        const [animales] = await db.query('SELECT energia, sociabilidad FROM animales WHERE id = ?', [registro.animal_id]);
+        if (animales.length > 0) {
+          statsAnimal = {
+            energia: animales[0].energia,
+            sociabilidad: animales[0].sociabilidad
+          };
+        }
+      }
+
       return res.json({
         mensaje: 'Tarea aprobada. XP asignada al voluntario.',
         xp_otorgada: registro.recompensa_xp,
         nueva_xp_total: nuevaXp,
-        nuevo_nivel: nuevoNivel
+        nuevo_nivel: nuevoNivel,
+        efecto_energia: registro.efecto_energia,
+        efecto_sociabilidad: registro.efecto_sociabilidad,
+        stats_animal: statsAnimal
       });
     }
 
@@ -1032,6 +1091,102 @@ app.get('/api/informes/voluntarios', verificarToken, verificarAdmin, async (req,
   } catch (error) {
     console.error('Error al generar informe de voluntarios:', error);
     res.status(500).json({ error: 'Error interno al generar el informe.' });
+  }
+});
+
+// ==========================================
+// ENDPOINTS PAYPAL (pasarela de donaciones)
+// ==========================================
+// Arquitectura server-side: la orden se CREA y se CAPTURA desde el backend
+// para que el importe no sea manipulable desde el cliente. El frontend solo
+// recibe un orderID que pasa al SDK de PayPal.
+
+// Helper: valida que PayPal esté configurado antes de procesar
+const verificarPayPalDisponible = (req, res, next) => {
+  if (!paypalOrdersController) {
+    return res.status(503).json({ 
+      error: 'La pasarela de PayPal no está configurada en el servidor.' 
+    });
+  }
+  next();
+};
+
+// 1. CREAR ORDEN: el frontend pide al backend que cree una orden con un importe
+app.post('/api/paypal/crear-orden', verificarPayPalDisponible, async (req, res) => {
+  try {
+    const { cantidad } = req.body;
+
+    // Validación estricta del importe (nunca confiar en el cliente)
+    const importe = Number(cantidad);
+    if (!Number.isFinite(importe) || importe < 1 || importe > 10000) {
+      return res.status(400).json({ 
+        error: 'Importe inválido. Debe estar entre 1€ y 10.000€.' 
+      });
+    }
+
+    const importeFormateado = importe.toFixed(2); // PayPal exige 2 decimales como string
+
+    const { result } = await paypalOrdersController.createOrder({
+      body: {
+        intent: 'CAPTURE',
+        purchaseUnits: [{
+          amount: {
+            currencyCode: 'EUR',
+            value: importeFormateado,
+          },
+          description: 'Donación al refugio ShelterDex',
+        }],
+      },
+      prefer: 'return=representation',
+    });
+
+    return res.status(201).json({
+      orderID: result.id,
+      status: result.status,
+    });
+  } catch (error) {
+    console.error('Error al crear orden PayPal:', error?.message || error);
+    return res.status(500).json({ error: 'No se pudo crear la orden de pago.' });
+  }
+});
+
+// 2. CAPTURAR ORDEN: el frontend llama aquí cuando el usuario aprueba el pago
+app.post('/api/paypal/capturar-orden/:orderID', verificarPayPalDisponible, async (req, res) => {
+  try {
+    const { orderID } = req.params;
+
+    if (!orderID || typeof orderID !== 'string') {
+      return res.status(400).json({ error: 'orderID inválido.' });
+    }
+
+    const { result } = await paypalOrdersController.captureOrder({
+      id: orderID,
+      prefer: 'return=representation',
+    });
+
+    // Solo consideramos éxito si el estado final es COMPLETED
+    if (result.status !== 'COMPLETED') {
+      return res.status(402).json({ 
+        error: `El pago no se completó (estado: ${result.status}).`,
+        status: result.status
+      });
+    }
+
+    // Extraer datos útiles de la captura para devolver al frontend
+    const captura = result.purchaseUnits?.[0]?.payments?.captures?.[0];
+
+    return res.json({
+      mensaje: 'Donación procesada correctamente.',
+      orderID: result.id,
+      captureID: captura?.id,
+      importe: captura?.amount?.value,
+      moneda: captura?.amount?.currencyCode,
+      nombre_donante: result.payer?.name?.givenName || null,
+      email_donante: result.payer?.emailAddress || null,
+    });
+  } catch (error) {
+    console.error('Error al capturar orden PayPal:', error?.message || error);
+    return res.status(500).json({ error: 'No se pudo capturar el pago.' });
   }
 });
 
