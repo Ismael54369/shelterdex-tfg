@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { API_URL, urlImagen } from '../config/api';
 
 // Componente auxiliar: slider de estadística 0-100 con valor visible.
 // Declarado fuera del componente padre para evitar re-crearlo en cada render
@@ -66,7 +67,7 @@ function AdminDashboard() {
   const [animalAEditar, setAnimalAEditar] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/animales')
+    fetch(`${API_URL}/api/animales`)
       .then(respuesta => respuesta.json())
       .then(datos => setAnimales(datos))
       .catch(error => console.error("Error cargando animales:", error));
@@ -77,7 +78,7 @@ function AdminDashboard() {
   }, []);
 
   const cargarSolicitudesAdopcion = () => {
-fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders() })      .then(res => res.json())
+fetch(`${API_URL}/api/adopciones/pendientes`, { headers: authHeaders() })      .then(res => res.json())
       .then(datos => {
         if (Array.isArray(datos)) setSolicitudesAdopcion(datos);
       })
@@ -86,7 +87,7 @@ fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders(
 
   const revisarAdopcion = async (idSolicitud, estado, animal) => {
     try {
-      const respuesta = await fetch(`http://localhost:3000/api/adopciones/revisar/${idSolicitud}`, {
+      const respuesta = await fetch(`${API_URL}/api/adopciones/revisar/${idSolicitud}`, {
         method: 'PUT',
         headers: authHeadersJSON(),
         body: JSON.stringify({ estado })
@@ -110,7 +111,7 @@ fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders(
             );
           }
           // Recargar también los animales para que el admin vea los cambios en la tabla
-          const resAnimales = await fetch('http://localhost:3000/api/animales');
+          const resAnimales = await fetch(`${API_URL}/api/animales`);
           if (resAnimales.ok) {
             setAnimales(await resAnimales.json());
           }
@@ -128,7 +129,7 @@ fetch('http://localhost:3000/api/adopciones/pendientes', { headers: authHeaders(
   };
 
   const cargarEstadisticas = () => {
-fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() })      .then(res => res.json())
+fetch(`${API_URL}/api/admin/estadisticas`, { headers: authHeaders() })      .then(res => res.json())
       .then(datos => setEstadisticas(datos))
       .catch(error => console.error('Error cargando estadísticas:', error));
   };
@@ -142,7 +143,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
 
   const cargarImagenesGaleria = async (animalId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/animales/${animalId}/imagenes`);
+      const res = await fetch(`${API_URL}/api/animales/${animalId}/imagenes`);
       const datos = await res.json();
       if (Array.isArray(datos)) setImagenesGaleria(datos);
     } catch (error) {
@@ -161,7 +162,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/api/animales/${animalGaleria.id}/imagenes`, {
+      const res = await fetch(`${API_URL}/api/animales/${animalGaleria.id}/imagenes`, {
         method: 'POST',
         headers: authHeaders(),
         body: formData
@@ -172,7 +173,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
         toast.success(datos.mensaje, { icon: '📸' });
         await cargarImagenesGaleria(animalGaleria.id);
         // Refrescar lista de animales para que se actualice la portada
-        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const resAnimales = await fetch(`${API_URL}/api/animales`);
         const datosAnimales = await resAnimales.json();
         setAnimales(datosAnimales);
       } else {
@@ -188,7 +189,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
 
   const establecerPortada = async (idImagen) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/imagenes/${idImagen}/portada`, {
+      const res = await fetch(`${API_URL}/api/imagenes/${idImagen}/portada`, {
         method: 'PUT',
         headers: authHeaders()
       });
@@ -196,7 +197,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
       if (res.ok) {
         toast.success('Portada actualizada.', { icon: '⭐' });
         await cargarImagenesGaleria(animalGaleria.id);
-        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const resAnimales = await fetch(`${API_URL}/api/animales`);
         const datosAnimales = await resAnimales.json();
         setAnimales(datosAnimales);
       }
@@ -209,7 +210,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
     if (!confirm('¿Seguro que quieres borrar esta imagen?')) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/imagenes/${idImagen}`, {
+      const res = await fetch(`${API_URL}/api/imagenes/${idImagen}`, {
         method: 'DELETE',
         headers: authHeaders()
       });
@@ -217,7 +218,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
       if (res.ok) {
         toast.success('Imagen eliminada.', { icon: '🗑️' });
         await cargarImagenesGaleria(animalGaleria.id);
-        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const resAnimales = await fetch(`${API_URL}/api/animales`);
         const datosAnimales = await resAnimales.json();
         setAnimales(datosAnimales);
       }
@@ -229,8 +230,8 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
   const descargarInforme = async (tipo, filtro = 'Todos') => {
     try {
       const url = tipo === 'animales'
-        ? `http://localhost:3000/api/informes/animales?estado=${filtro}`
-        : 'http://localhost:3000/api/informes/voluntarios';
+        ? `${API_URL}/api/informes/animales?estado=${filtro}`
+        : `${API_URL}/api/informes/voluntarios`;
 
       const respuesta = await fetch(url, { headers: authHeaders() });
 
@@ -260,7 +261,7 @@ fetch('http://localhost:3000/api/admin/estadisticas', { headers: authHeaders() }
   };
 
   const cargarTareasPendientes = () => {
-fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })      .then(respuesta => respuesta.json())
+fetch(`${API_URL}/api/tareas/pendientes`, { headers: authHeaders() })      .then(respuesta => respuesta.json())
       .then(datos => {
         if (Array.isArray(datos)) setTareasPendientes(datos);
       })
@@ -270,7 +271,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
   // Función para aprobar o rechazar una tarea
   const revisarTarea = async (idRegistro, estado, voluntario) => {
     try {
-      const respuesta = await fetch(`http://localhost:3000/api/tareas/revisar/${idRegistro}`, {
+      const respuesta = await fetch(`${API_URL}/api/tareas/revisar/${idRegistro}`, {
         method: 'PUT',
         headers: authHeadersJSON(),
         body: JSON.stringify({ estado })
@@ -303,7 +304,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
   
   const confirmarBorrado = async () => {
     try {
-      await fetch(`http://localhost:3000/api/animales/${animalSeleccionado.id}`, { method: 'DELETE', headers: authHeaders() });      
+      await fetch(`${API_URL}/api/animales/${animalSeleccionado.id}`, { method: 'DELETE', headers: authHeaders() });      
       setAnimales(animales.filter(a => a.id !== animalSeleccionado.id));
       toast.success(`${animalSeleccionado.nombre} eliminado.`, { icon: '🗑️' });
       setAnimalSeleccionado(null);
@@ -319,7 +320,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
     const formData = new FormData(e.target);
 
     try {
-      const respuesta = await fetch('http://localhost:3000/api/animales', {
+      const respuesta = await fetch(`${API_URL}/api/animales`, {
         method: 'POST',
         headers: authHeaders(),
         body: formData
@@ -328,7 +329,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
       
       if (respuesta.ok) {
         // Recargamos la lista completa desde el servidor para tener la URL de imagen correcta
-        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const resAnimales = await fetch(`${API_URL}/api/animales`);
         const datosAnimales = await resAnimales.json();
         setAnimales(datosAnimales);
         
@@ -359,7 +360,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
     }
 
     try {
-      const respuesta = await fetch(`http://localhost:3000/api/animales/${animalAEditar.id}`, {
+      const respuesta = await fetch(`${API_URL}/api/animales/${animalAEditar.id}`, {
         method: 'PUT',
         headers: authHeaders(),
         body: formData
@@ -367,7 +368,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
       
       if (respuesta.ok) {
         // Recargamos desde el servidor para tener datos frescos
-        const resAnimales = await fetch('http://localhost:3000/api/animales');
+        const resAnimales = await fetch(`${API_URL}/api/animales`);
         const datosAnimales = await resAnimales.json();
         setAnimales(datosAnimales);
         
@@ -526,7 +527,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                 <td className="p-3 sm:p-4 text-gray-400 font-retro text-xs">#{animal.id}</td>
                 <td className="p-3 sm:p-4">
                   {animal.imagen 
-                    ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-10 h-10 sm:w-14 sm:h-14 object-cover rounded-lg border-2 border-pokeDark group-hover:border-pokeYellow transition-colors" />
+                    ? <img src={urlImagen(animal.imagen)} alt={animal.nombre} className="w-10 h-10 sm:w-14 sm:h-14 object-cover rounded-lg border-2 border-pokeDark group-hover:border-pokeYellow transition-colors" />
                     : <span className="text-2xl sm:text-3xl">{animal.emoji}</span>
                   }
                 </td>
@@ -682,7 +683,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                   {animalAEditar.imagen && (
                     <div className="mb-2">
                       <img 
-                        src={`http://localhost:3000${animalAEditar.imagen}`} 
+                        src={urlImagen(animalAEditar.imagen)} 
                         alt={animalAEditar.nombre}
                         className="w-24 h-24 object-cover rounded border-4 border-pokeDark"
                       />
@@ -748,7 +749,7 @@ fetch('http://localhost:3000/api/tareas/pendientes', { headers: authHeaders() })
                 {imagenesGaleria.map((img) => (
                   <div key={img.id} className={`relative group rounded-lg overflow-hidden border-4 ${img.es_portada ? 'border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'border-gray-300'}`}>
                     <img
-                      src={`http://localhost:3000${img.ruta}`}
+                      src={urlImagen(img.ruta)}
                       alt={`Foto de ${animalGaleria.nombre}`}
                       className="w-full h-32 sm:h-40 object-cover"
                     />

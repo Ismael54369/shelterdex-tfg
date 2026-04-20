@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 15-04-2026 a las 16:30:17
+-- Tiempo de generación: 20-04-2026 a las 11:46:34
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -46,9 +46,8 @@ CREATE TABLE `animales` (
 --
 
 INSERT INTO `animales` (`id`, `nombre`, `especie`, `edad`, `peso`, `energia`, `sociabilidad`, `emoji`, `imagen`, `descripcion`, `estado`) VALUES
-(1, 'Rex', 'Perro', '3 años', '25 kg', 80, 60, '🐶', '/uploads/1776155576848.jpg', 'Rex es un perro muy enérgico. Le encantan los paseos largos y jugar a la pelota. Ideal para familias activas.', 'Refugio'),
+(1, 'Rex', 'Perro', '3 años', '25 kg', 81, 79, '🐶', '/uploads/1776155576848.jpg', 'Rex es un perro muy enérgico. Le encantan los paseos largos y jugar a la pelota. Ideal para familias activas.', 'Refugio'),
 (2, 'Luna', 'Gato', '1 año', '4 kg', 40, 90, '🐱', '/uploads/1776158673626.png', 'Luna es muy cariñosa y tranquila. Disfruta de las siestas al sol y de los mimos en el sofá.', 'Acogida'),
-(3, 'Toby', 'Perro', '5 meses', '8 kg', 95, 50, '🐕', '/uploads/1776168190240.png', 'Un cachorro curioso que está aprendiendo a socializar. Necesita paciencia y mucho amor.', 'Adoptado'),
 (5, 'Manolin', 'Perro', '2 meses', '7 kg', 50, 50, '🐾', '/uploads/1776159061826.png', 'Perro muy jugueton, enérgico y muy cariñoso', 'Refugio'),
 (6, 'Rio', 'Otro', '5 años', '3 kg', 50, 50, '🦜', '/uploads/1776246506321.png', 'Loro que sabe hablar y entrenado para resolver puzzles, aunque es tímido es bastante cariñoso', 'Refugio'),
 (7, 'Garfield', 'Gato', '7 años', '6 kg', 50, 50, '🐾', '/uploads/1776247203408.png', 'Gato senior, tranquilo y con visión reducida. Busca un hogar sin grandes sobresaltos donde pueda disfrutar de su jubilación. Se adapta rápido si se le habla con cariño y se le guía con paciencia.', 'Refugio'),
@@ -65,6 +64,8 @@ CREATE TABLE `catalogo_tareas` (
   `id` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `recompensa_xp` int(11) NOT NULL,
+  `efecto_energia` int(11) NOT NULL DEFAULT 0,
+  `efecto_sociabilidad` int(11) NOT NULL DEFAULT 0,
   `frecuencia` enum('diaria','semanal') DEFAULT 'diaria'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -72,12 +73,12 @@ CREATE TABLE `catalogo_tareas` (
 -- Volcado de datos para la tabla `catalogo_tareas`
 --
 
-INSERT INTO `catalogo_tareas` (`id`, `nombre`, `recompensa_xp`, `frecuencia`) VALUES
-(1, 'Alimentación y agua', 10, 'diaria'),
-(2, 'Paseo estándar', 15, 'diaria'),
-(3, 'Limpieza de recinto', 20, 'diaria'),
-(4, 'Baño y cepillado', 50, 'semanal'),
-(5, 'Entrenamiento de obediencia', 80, 'semanal');
+INSERT INTO `catalogo_tareas` (`id`, `nombre`, `recompensa_xp`, `efecto_energia`, `efecto_sociabilidad`, `frecuencia`) VALUES
+(1, 'Alimentación y agua', 10, 10, 2, 'diaria'),
+(2, 'Paseo estándar', 15, -8, 5, 'diaria'),
+(3, 'Limpieza de recinto', 20, 0, 0, 'diaria'),
+(4, 'Baño y cepillado', 50, -10, 8, 'semanal'),
+(5, 'Entrenamiento de obediencia', 80, -15, 12, 'semanal');
 
 -- --------------------------------------------------------
 
@@ -111,10 +112,6 @@ INSERT INTO `imagenes_animales` (`id`, `animal_id`, `ruta`, `es_portada`, `fecha
 (11, 5, '/uploads/1776159061826.png', 1, '2026-04-14 09:31:01'),
 (12, 5, '/uploads/1776159061832.png', 0, '2026-04-14 09:31:01'),
 (13, 5, '/uploads/1776159061837.jpg', 0, '2026-04-14 09:31:01'),
-(14, 3, '/uploads/1776168190198.png', 0, '2026-04-14 12:03:10'),
-(15, 3, '/uploads/1776168190211.png', 0, '2026-04-14 12:03:10'),
-(16, 3, '/uploads/1776168190223.png', 0, '2026-04-14 12:03:10'),
-(18, 3, '/uploads/1776168190240.png', 1, '2026-04-14 12:03:10'),
 (19, 6, '/uploads/1776246506300.png', 0, '2026-04-15 09:48:26'),
 (20, 6, '/uploads/1776246506309.png', 0, '2026-04-15 09:48:26'),
 (21, 6, '/uploads/1776246506321.png', 1, '2026-04-15 09:48:26'),
@@ -161,7 +158,10 @@ INSERT INTO `registro_tareas` (`id`, `usuario_id`, `animal_id`, `tarea_id`, `est
 (7, 4, 5, 3, 'rechazada', '2026-04-13 11:48:47'),
 (8, 4, 1, 2, 'rechazada', '2026-04-13 11:48:49'),
 (9, 5, 6, 1, 'aprobada', '2026-04-15 10:50:11'),
-(10, 5, 7, 1, 'aprobada', '2026-04-15 10:50:22');
+(10, 5, 7, 1, 'aprobada', '2026-04-15 10:50:22'),
+(11, 4, 1, 2, 'aprobada', '2026-04-16 08:47:27'),
+(12, 4, 1, 1, 'aprobada', '2026-04-16 08:55:56'),
+(13, 4, 1, 5, 'aprobada', '2026-04-16 08:59:14');
 
 -- --------------------------------------------------------
 
@@ -211,7 +211,7 @@ INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `rol`, `xp`, `nivel
 (1, 'admin', 'admin@shelterdex.es', '$2b$10$jaxDpHk5fn8WyCNoLb7wPuvSzmxV8YZg6P/vrEirZYAegZslfdPbq', 'admin', 0, 1),
 (2, 'Ash ', 'ash@pueblopaleta.com', '$2b$10$zVmfAYrBuk.SPsgTRa9vmOCDyVDBwXaNQ8YY/hNhL00tzplU8AuJa', 'voluntario', 0, 1),
 (3, 'Gary Oak', 'gary@pueblopaleta.com', '$2b$10$fi6M9TrO0Ed/NLQjKDymU.JuTbIlVUOvZx3BO17VtkAFHui8cF69G', 'voluntario', 30, 1),
-(4, 'Ismael Gonzalez', 'ismael@gmail.com', '$2b$10$ImknpNYbgPdS1ppHWUZQ3.idUY9Sdj9hjUCC05deTmEX8fBsuia9G', 'voluntario', 425, 3),
+(4, 'Ismael Gonzalez', 'ismael@gmail.com', '$2b$10$ImknpNYbgPdS1ppHWUZQ3.idUY9Sdj9hjUCC05deTmEX8fBsuia9G', 'voluntario', 530, 4),
 (5, 'Angie', 'angie@gmail.com', '$2b$10$l/GWjAlU1gwzHgQu8vFgj.Jf0qEkFZVrMWXE0IYzR.VDt.x/rmoK2', 'voluntario', 20, 1);
 
 --
@@ -286,7 +286,7 @@ ALTER TABLE `imagenes_animales`
 -- AUTO_INCREMENT de la tabla `registro_tareas`
 --
 ALTER TABLE `registro_tareas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `solicitudes_adopcion`

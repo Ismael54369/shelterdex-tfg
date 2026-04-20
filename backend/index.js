@@ -11,11 +11,17 @@ import { Client, Environment, OrdersController } from '@paypal/paypal-server-sdk
 const app = express();
 
 // Middlewares
-app.use(cors()); 
+// CORS: en desarrollo acepta cualquier origen; en producción solo el frontend autorizado.
+// La variable FRONTEND_URL se lee del .env (ej: "https://shelterdex.vercel.app").
+// Si no está definida, se permite cualquier origen (modo desarrollo).
+const corsOptions = process.env.FRONTEND_URL
+  ? { origin: process.env.FRONTEND_URL, credentials: true }
+  : { origin: '*' };
+app.use(cors(corsOptions)); 
 app.use(express.json());
 
 // Servir la carpeta de imágenes como ruta pública
-// Esto permite acceder a las fotos con: http://localhost:3000/uploads/nombre-archivo.jpg
+// Accesibles en: <API_URL>/uploads/nombre-archivo.jpg
 app.use('/uploads', express.static('uploads'));
 
 // Configuración de Multer (dónde y cómo se guardan las imágenes)

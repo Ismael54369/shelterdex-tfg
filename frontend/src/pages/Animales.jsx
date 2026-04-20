@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { API_URL, urlImagen } from '../config/api';
 
 function Animales() {
   const [animales, setAnimales] = useState([]);
@@ -8,7 +9,7 @@ function Animales() {
   const [filtroEstado, setFiltroEstado] = useState('Todos');
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/animales')
+    fetch(`${API_URL}/api/animales`)
       .then(res => res.json())
       .then(datos => {
         if (Array.isArray(datos)) setAnimales(datos);
@@ -87,7 +88,7 @@ function Animales() {
               {/* Foto */}
               <div className="aspect-[4/3] bg-pokeLight flex items-center justify-center overflow-hidden relative">
                 {animal.imagen 
-                  ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ? <img src={urlImagen(animal.imagen)} alt={animal.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   : <span className="text-7xl">{animal.emoji}</span>
                 }
                 {/* Badge de estado */}

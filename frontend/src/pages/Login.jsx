@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { API_URL } from '../config/api';
 
 function Login() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ function Login() {
     }
 
     setCargando(true);
-    const url = esRegistro ? 'http://localhost:3000/api/registro' : 'http://localhost:3000/api/login';
+    const url = esRegistro ? `${API_URL}/api/registro` : `${API_URL}/api/login`;
     const payload = esRegistro ? { nombre, email, password } : { email, password };
 
     try {

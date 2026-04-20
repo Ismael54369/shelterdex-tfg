@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { API_URL, urlImagen } from '../config/api';
 
 function Home() {
   const [stats, setStats] = useState(null);
   const [animalesDestacados, setAnimalesDestacados] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/stats/publicas')
+    fetch(`${API_URL}/api/stats/publicas`)
       .then(res => res.json())
       .then(datos => setStats(datos))
       .catch(() => {});
 
-    fetch('http://localhost:3000/api/animales')
+    fetch(`${API_URL}/api/animales`)
       .then(res => res.json())
       .then(datos => {
         if (Array.isArray(datos)) {
@@ -134,7 +135,7 @@ function Home() {
                 <Link to={`/animales/${animal.id}`} key={animal.id} className="poke-card overflow-hidden group hover:-translate-y-2 transition-transform">
                   <div className="h-48 bg-pokeLight flex items-center justify-center overflow-hidden">
                     {animal.imagen
-                      ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      ? <img src={urlImagen(animal.imagen)} alt={animal.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       : <span className="text-7xl">{animal.emoji}</span>
                     }
                   </div>

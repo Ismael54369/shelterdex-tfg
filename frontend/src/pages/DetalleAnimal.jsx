@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { API_URL, urlImagen } from '../config/api';
 
 function DetalleAnimal() {
   const { id } = useParams();
@@ -14,7 +15,7 @@ function DetalleAnimal() {
   const [relacionados, setRelacionados] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/animales/${id}`)
+    fetch(`${API_URL}/api/animales/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('No encontrado');
         return res.json();
@@ -22,12 +23,12 @@ function DetalleAnimal() {
       .then(datos => {
         setAnimal(datos);
         setCargando(false);
-        fetch(`http://localhost:3000/api/animales/${id}/imagenes`)
+        fetch(`${API_URL}/api/animales/${id}/imagenes`)
           .then(r => r.json())
           .then(imgs => { if (Array.isArray(imgs)) setImagenes(imgs); })
           .catch(() => {});
         // Cargar animales relacionados (misma especie, diferente ID)
-        fetch('http://localhost:3000/api/animales')
+        fetch(`${API_URL}/api/animales`)
           .then(r => r.json())
           .then(todos => {
             if (Array.isArray(todos)) {
@@ -45,7 +46,7 @@ function DetalleAnimal() {
     setEnviando(true);
     const formData = new FormData(e.target);
     try {
-      const respuesta = await fetch('http://localhost:3000/api/adopciones/solicitar', {
+      const respuesta = await fetch(`${API_URL}/api/adopciones/solicitar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -116,7 +117,7 @@ function DetalleAnimal() {
           <div className="bg-pokeLight border-4 border-pokeDark rounded-xl w-full aspect-[4/3] flex items-center justify-center overflow-hidden relative shadow-[4px_4px_0px_0px_#222224]">
             {imagenes.length > 0 ? (
               <>
-                <img src={`http://localhost:3000${imagenes[imagenActiva]?.ruta}`} alt={animal.nombre} className="w-full h-full object-cover" />
+                <img src={urlImagen(imagenes[imagenActiva]?.ruta)} alt={animal.nombre} className="w-full h-full object-cover" />
                 {imagenes.length > 1 && (
                   <>
                     <button
@@ -132,7 +133,7 @@ function DetalleAnimal() {
                 )}
               </>
             ) : animal.imagen ? (
-              <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-full h-full object-cover" />
+              <img src={urlImagen(animal.imagen)} alt={animal.nombre} className="w-full h-full object-cover" />
             ) : (
               <span className="text-8xl">{animal.emoji}</span>
             )}
@@ -149,7 +150,7 @@ function DetalleAnimal() {
                     imagenActiva === index ? 'border-pokeYellow shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'border-gray-300 opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={`http://localhost:3000${img.ruta}`} alt="" className="w-full h-full object-cover" />
+                  <img src={urlImagen(img.ruta)} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -288,7 +289,7 @@ function DetalleAnimal() {
               <Link to={`/animales/${rel.id}`} key={rel.id} className="poke-card overflow-hidden group hover:-translate-y-1 transition-transform" onClick={() => window.scrollTo(0, 0)}>
                 <div className="h-60 bg-pokeLight flex items-center justify-center overflow-hidden">
                   {rel.imagen
-                    ? <img src={`http://localhost:3000${rel.imagen}`} alt={rel.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ? <img src={urlImagen(rel.imagen)} alt={rel.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     : <span className="text-5xl">{rel.emoji}</span>
                   }
                 </div>
