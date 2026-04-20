@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { API_URL } from '../config/api';
 
 function Donaciones() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ function Donaciones() {
   // createOrder: pedimos al BACKEND que cree la orden con el importe validado server-side
   const crearOrdenPayPal = async () => {
     try {
-      const respuesta = await fetch('http://localhost:3000/api/paypal/crear-orden', {
+      const respuesta = await fetch(`${API_URL}/api/paypal/crear-orden`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cantidad: Number(cantidad) })
@@ -101,7 +102,7 @@ function Donaciones() {
   // onApprove: el usuario aprobó el pago en el popup → pedimos al BACKEND que capture la orden
   const capturarOrdenPayPal = async (data) => {
     try {
-      const respuesta = await fetch(`http://localhost:3000/api/paypal/capturar-orden/${data.orderID}`, {
+      const respuesta = await fetch(`${API_URL}/api/paypal/capturar-orden/${data.orderID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });

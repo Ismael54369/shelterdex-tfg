@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { API_URL, urlImagen } from '../config/api';
 
 function DashboardVoluntario() {
   const navigate = useNavigate();
@@ -22,9 +23,9 @@ function DashboardVoluntario() {
   const cargarDatos = async () => {
     try {
       const [resAnimales, resCatalogo, resRanking] = await Promise.all([
-        fetch('http://localhost:3000/api/animales'),
-        fetch('http://localhost:3000/api/tareas/catalogo'),
-        fetch('http://localhost:3000/api/ranking')
+        fetch(`${API_URL}/api/animales`),
+        fetch(`${API_URL}/api/tareas/catalogo`),
+        fetch(`${API_URL}/api/ranking`)
       ]);
 
       const datosAnimales = await resAnimales.json();
@@ -36,7 +37,7 @@ function DashboardVoluntario() {
       if (Array.isArray(datosRanking)) setRanking(datosRanking);
 
       if (idUsuario) {
-        const resPerfil = await fetch(`http://localhost:3000/api/usuarios/${idUsuario}/perfil`);
+        const resPerfil = await fetch(`${API_URL}/api/usuarios/${idUsuario}/perfil`);
         const datosPerfil = await resPerfil.json();
         if (datosPerfil.xp !== undefined) { setXp(datosPerfil.xp); setNivel(datosPerfil.nivel); }
       }
@@ -48,7 +49,7 @@ function DashboardVoluntario() {
 
   const cargarHistorial = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/tareas/historial/${idUsuario}`, {
+      const res = await fetch(`${API_URL}/api/tareas/historial/${idUsuario}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('tokenShelterDex')}` }
       });
       const datos = await res.json();
@@ -65,7 +66,7 @@ function DashboardVoluntario() {
     if (cargando) return;
     setCargando(true);
     try {
-      const respuesta = await fetch('http://localhost:3000/api/tareas/registrar', {
+      const respuesta = await fetch(`${API_URL}/api/tareas/registrar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('tokenShelterDex')}` },
         body: JSON.stringify({ usuario_id: Number(idUsuario), animal_id: animalId, tarea_id: tareaId })
@@ -153,7 +154,7 @@ function DashboardVoluntario() {
                 <div className="p-3 sm:p-4 border-b-4 border-pokeDark bg-pokeLight">
                   <div className="flex items-center gap-3">
                     {animal.imagen 
-                      ? <img src={`http://localhost:3000${animal.imagen}`} alt={animal.nombre} className="w-12 h-12 object-cover rounded-lg border-2 border-pokeDark flex-shrink-0" />
+                      ? <img src={urlImagen(animal.imagen)} alt={animal.nombre} className="w-12 h-12 object-cover rounded-lg border-2 border-pokeDark flex-shrink-0" />
                       : <span className="text-3xl flex-shrink-0">{animal.emoji}</span>
                     }
                     <div className="flex-1 min-w-0">
