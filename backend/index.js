@@ -7,51 +7,91 @@ import multer from 'multer';
 import path from 'path';
 import PDFDocument from 'pdfkit';
 import { Client, Environment, OrdersController } from '@paypal/paypal-server-sdk';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 const app = express();
 
 // Middlewares
-// CORS: en desarrollo acepta cualquier origen; en producción solo el frontend autorizado.
-// La variable FRONTEND_URL se lee del .env (ej: "https://shelterdex.vercel.app").
-// Si no está definida, se permite cualquier origen (modo desarrollo).
 const corsOptions = process.env.FRONTEND_URL
   ? { origin: process.env.FRONTEND_URL, credentials: true }
   : { origin: '*' };
-app.use(cors(corsOptions)); 
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Servir la carpeta de imágenes como ruta pública
-// Accesibles en: <API_URL>/uploads/nombre-archivo.jpg
+// Servir la carpeta de imágenes como ruta pública (solo útil en desarrollo local)
 app.use('/uploads', express.static('uploads'));
 
-// Configuración de Multer (dónde y cómo se guardan las imágenes)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    // Generamos un nombre único: timestamp + extensión original
-    // Ejemplo: 1712750400000.jpg
-    const nombreUnico = Date.now() + path.extname(file.originalname);
-    cb(null, nombreUnico);
-  }
-});
+// ==========================================
+// CONFIGURACIÓN DE IMÁGENES (Multer + Cloudinary)
+// ==========================================
+// Si las credenciales de Cloudinary están configuradas, las imágenes se suben a la nube.
+// Si no, se guardan en disco local (modo desarrollo con XAMPP).
 
-// Filtro de seguridad: solo aceptamos imágenes reales
-const filtroImagenes = (req, file, cb) => {
-  const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
-  if (tiposPermitidos.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Solo se permiten imágenes JPG, PNG o WebP.'), false);
-  }
-};
+const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 
-const upload = multer({ 
-  storage, 
-  fileFilter: filtroImagenes,
-  limits: { fileSize: 5 * 1024 * 1024 } // Máximo 5MB
-});
+let upload;
+
+if (useCloudinary) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+
+  const cloudStorage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: 'shelterdex',           // Carpeta en Cloudinary
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: [{ width: 1200, crop: 'limit' }],  // Limitar ancho para no gastar cuota
+    },
+  });
+
+  upload = multer({ storage: cloudStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+  console.log('[Cloudinary] Imágenes se subirán a la nube.');
+} else {
+  // Modo local: guardar en disco
+  const localStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => {
+      const nombreUnico = Date.now() + path.extname(file.originalname);
+      cb(null, nombreUnico);
+    }
+  });
+
+  const filtroImagenes = (req, file, cb) => {
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+    if (tiposPermitidos.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Solo se permiten imágenes JPG, PNG o WebP.'), false);
+  };
+
+  upload = multer({ storage: localStorage, fileFilter: filtroImagenes, limits: { fileSize: 5 * 1024 * 1024 } });
+  console.log('[Imágenes] Modo local: guardando en carpeta uploads/.');
+}
+
+// Helper: obtener la URL/ruta de un archivo subido.
+// En Cloudinary: req.file.path es la URL completa (https://res.cloudinary.com/...)
+// En local: construimos la ruta relativa /uploads/nombre.jpg
+function obtenerRutaImagen(file) {
+  if (!file) return null;
+  if (useCloudinary) return file.path;       // URL completa de Cloudinary
+  return `/uploads/${file.filename}`;         // Ruta relativa local
+}
+
+// Helper: extraer el public_id de Cloudinary desde una URL para poder borrar la imagen.
+// Ejemplo: "https://res.cloudinary.com/xxx/image/upload/v123/shelterdex/abc123.jpg"
+//       → "shelterdex/abc123"
+function obtenerPublicId(url) {
+  if (!url || !url.includes('cloudinary.com')) return null;
+  const partes = url.split('/upload/');
+  if (partes.length < 2) return null;
+  const despuesDeUpload = partes[1]; // "v123/shelterdex/abc123.jpg"
+  // Quitar la versión (v123/) si existe
+  const sinVersion = despuesDeUpload.replace(/^v\d+\//, '');
+  // Quitar la extensión
+  return sinVersion.replace(/\.[^.]+$/, '');
+}
 
 // ==========================================
 // CLIENTE PAYPAL (SDK oficial)
@@ -171,7 +211,7 @@ app.post('/api/animales', verificarToken, verificarAdmin, upload.single('imagen'
     const { nombre, especie, edad, peso, energia, sociabilidad, emoji, descripcion } = req.body;
     
     // Si se subió una imagen, guardamos la ruta relativa; si no, queda NULL
-    const rutaImagen = req.file ? `/uploads/${req.file.filename}` : null;
+    const rutaImagen = obtenerRutaImagen(req.file);
     
     const sql = `
       INSERT INTO animales 
@@ -211,7 +251,7 @@ app.put('/api/animales/:id', verificarToken, verificarAdmin, upload.single('imag
     // Si se sube nueva imagen, usamos la nueva ruta; si no, mantenemos la que ya tenía
     let rutaImagen = req.body.imagenExistente || null;
     if (req.file) {
-      rutaImagen = `/uploads/${req.file.filename}`;
+      rutaImagen = obtenerRutaImagen(req.file);
     }
     
     const sql = `
@@ -652,7 +692,7 @@ app.post('/api/animales/:id/imagenes', verificarToken, verificarAdmin, upload.ar
     const valores = req.files.map((file, index) => {
       // La primera imagen subida será portada si el animal no tiene ninguna
       const esPortada = (portadaExiste.length === 0 && index === 0) ? 1 : 0;
-      return [animalId, `/uploads/${file.filename}`, esPortada];
+      return [animalId, obtenerRutaImagen(file), esPortada];
     });
 
     await db.query(
@@ -733,7 +773,16 @@ app.delete('/api/imagenes/:id', verificarToken, verificarAdmin, async (req, res)
     const eraPortada = imagen[0].es_portada;
     const animalId = imagen[0].animal_id;
 
-    // Borrar el registro
+    // Borrar de Cloudinary si aplica
+    if (useCloudinary) {
+      const publicId = obtenerPublicId(imagen[0].ruta);
+      if (publicId) {
+        try { await cloudinary.uploader.destroy(publicId); } 
+        catch (err) { console.warn('No se pudo borrar de Cloudinary:', err.message); }
+      }
+    }
+
+    // Borrar el registro de la BD
     await db.query('DELETE FROM imagenes_animales WHERE id = ?', [idImagen]);
 
     // Si era la portada, asignar otra como portada (la más antigua)
