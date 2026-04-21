@@ -601,7 +601,7 @@ app.get('/api/ranking', async (req, res) => {
   try {
     // Seleccionamos a los voluntarios, los ordenamos por XP de mayor a menor y limitamos a los 5 mejores
     const [ranking] = await db.query(
-      'SELECT id, nombre, nivel, xp FROM usuarios WHERE rol = "voluntario" ORDER BY xp DESC LIMIT 5'
+      "SELECT id, nombre, nivel, xp FROM usuarios WHERE rol = 'voluntario' ORDER BY xp DESC LIMIT 5"
     );
     res.json(ranking);
   } catch (error) {
@@ -1033,7 +1033,7 @@ app.get('/api/informes/voluntarios', verificarToken, verificarAdmin, async (req,
   try {
     // Datos de voluntarios
     const [voluntarios] = await db.query(
-      'SELECT nombre, email, xp, nivel FROM usuarios WHERE rol = "voluntario" ORDER BY xp DESC'
+      "SELECT nombre, email, xp, nivel FROM usuarios WHERE rol = 'voluntario' ORDER BY xp DESC"
     );
 
     // Resumen de tareas
