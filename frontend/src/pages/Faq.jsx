@@ -44,7 +44,7 @@ function Faq() {
 
         <div className="mt-10 text-center bg-pokeDark rounded-xl p-6 sm:p-8">
           <p className="text-white font-bold mb-3">¿No has encontrado lo que buscabas?</p>
-          <Link to="/soporte" className="bg-pokeYellow text-pokeDark font-bold text-sm px-6 py-3 rounded-lg hover:bg-yellow-300 transition-colors inline-block">
+          <Link to="/soporte" className="bg-pokeYellow text-pokeDark font-bold text-xs sm:text-sm px-5 py-2.5 rounded-lg border-2 border-pokeDark hover:bg-yellow-300 transition-colors inline-block">
             Contactar con Soporte
           </Link>
         </div>
