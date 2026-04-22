@@ -129,7 +129,7 @@ function DashboardVoluntario() {
                 <div className="h-full bg-pokeYellow transition-all duration-1000 ease-out" style={{ width: `${porcentajeProgreso}%` }}></div>
               </div>
             </div>
-            <button onClick={handleCerrarSesion} className="w-full sm:w-auto bg-gray-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded border-2 border-gray-400 hover:bg-pokeRed hover:border-white transition-colors whitespace-nowrap text-sm">
+            <button onClick={handleCerrarSesion} className="w-full sm:w-auto bg-gray-600 text-white font-bold py-2 px-4 sm:px-5 rounded-lg border-2 border-gray-500 hover:bg-pokeRed hover:border-pokeRed transition-colors text-xs sm:text-sm">
               Cerrar Sesión
             </button>
           </div>
@@ -168,13 +168,13 @@ function DashboardVoluntario() {
                 <div className="p-3 sm:p-4">
                   <button
                     onClick={() => setAnimalSeleccionado(animalSeleccionado === animal.id ? null : animal.id)}
-                    className={`w-full font-bold py-2 sm:py-3 px-4 rounded-lg border-4 transition-all text-sm ${
+                    className={`w-full font-bold py-2 sm:py-2.5 px-4 rounded-lg border-4 transition-all text-xs sm:text-sm ${
                       animalSeleccionado === animal.id
                         ? 'bg-pokeDark text-pokeYellow border-pokeYellow'
                         : 'bg-pokeBlue text-white border-pokeDark hover:bg-blue-700'
                     }`}
                   >
-                    {animalSeleccionado === animal.id ? '✕ Cerrar' : '📋 Registrar tarea'}
+                    {animalSeleccionado === animal.id ? 'Cerrar' : 'Registrar tarea'}
                   </button>
 
                   {animalSeleccionado === animal.id && (
@@ -211,8 +211,8 @@ function DashboardVoluntario() {
           </div>
 
           {/* Botón de historial */}
-          <button onClick={toggleHistorial} className={`w-full font-bold py-3 px-4 rounded-lg border-4 transition-all mt-6 text-sm ${mostrarHistorial ? 'bg-pokeDark text-pokeYellow border-pokeYellow' : 'bg-white text-pokeDark border-pokeDark hover:bg-pokeDark hover:text-white'}`}>
-            {mostrarHistorial ? '✕ Cerrar historial' : '📜 Ver mi historial de tareas'}
+          <button onClick={toggleHistorial} className={`w-full font-bold py-2.5 px-4 rounded-lg border-4 transition-all mt-6 text-xs sm:text-sm ${mostrarHistorial ? 'bg-pokeDark text-pokeYellow border-pokeYellow' : 'bg-white text-pokeDark border-pokeDark hover:bg-pokeDark hover:text-white'}`}>
+            {mostrarHistorial ? 'Cerrar historial' : 'Ver mi historial de tareas'}
           </button>
 
           {mostrarHistorial && (

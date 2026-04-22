@@ -149,7 +149,7 @@ function Login() {
 
             <button 
               type="submit" disabled={cargando}
-              className="w-full bg-pokeRed text-white font-retro py-3 sm:py-4 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+              className="w-full bg-pokeRed text-white font-retro py-2.5 sm:py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[3px_3px_0px_0px_#222224] transition-all disabled:opacity-50 disabled:hover:translate-y-0 text-xs sm:text-sm"
             >
               {cargando ? 'Cargando...' : esRegistro ? 'Crear mi Cuenta' : 'Entrar'}
             </button>

@@ -89,7 +89,7 @@ function DetalleAnimal() {
           <p className="text-6xl mb-4">😿</p>
           <h2 className="text-2xl font-retro text-pokeRed mb-4">Animal no encontrado</h2>
           <p className="font-bold text-gray-500 mb-6">Es posible que haya sido adoptado o que el enlace sea incorrecto.</p>
-          <Link to="/animales" className="bg-pokeBlue text-white font-retro px-6 py-3 rounded-full border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-all">
+          <Link to="/animales" className="inline-block bg-pokeBlue text-white font-retro text-xs sm:text-sm px-5 py-2.5 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[3px_3px_0px_0px_#222224] transition-all">
             Volver al Catálogo
           </Link>
         </div>
@@ -239,9 +239,9 @@ function DetalleAnimal() {
           ) : !mostrarFormulario ? (
             <button 
               onClick={() => setMostrarFormulario(true)}
-              className="w-full bg-pokeRed text-white font-retro py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all text-xs sm:text-sm"
+              className="w-full bg-pokeRed text-white font-retro py-4 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all text-lg"
             >
-              Solicitar Adopción
+              ❤️ ¡Quiero Adoptarle!
             </button>
           ) : (
             <div className="bg-white border-4 border-pokeDark rounded-lg p-4 shadow-[4px_4px_0px_0px_#222224]">
@@ -266,7 +266,7 @@ function DetalleAnimal() {
                   <label className="block uppercase text-xs text-gray-500 mb-1">Mensaje (opcional)</label>
                   <textarea name="mensaje" rows="2" className="w-full p-2 border-4 border-gray-200 rounded-lg bg-white focus:border-pokeDark focus:outline-none" placeholder="¿Por qué quieres adoptarle?"></textarea>
                 </div>
-                <button type="submit" disabled={enviando} className="w-full bg-pokeRed text-white font-retro py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-all disabled:opacity-50">
+                <button type="submit" disabled={enviando} className="w-full bg-pokeRed text-white font-retro py-2.5 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-all disabled:opacity-50 text-xs sm:text-sm">
                   {enviando ? 'Enviando...' : 'Enviar Solicitud'}
                 </button>
               </form>

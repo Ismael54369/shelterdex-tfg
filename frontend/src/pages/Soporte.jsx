@@ -66,7 +66,7 @@ function Soporte() {
                   <label className="block text-gray-500 mb-1 text-xs uppercase">Describe la incidencia</label>
                   <textarea rows="4" required placeholder="Explica detalladamente tu problema..." className="w-full p-3 border-4 border-gray-200 rounded-lg focus:border-pokeDark focus:outline-none transition-colors"></textarea>
                 </div>
-                <button type="submit" className="w-full bg-pokeRed text-white font-retro py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark transition-all">
+                <button type="submit" className="w-full bg-pokeRed text-white font-retro py-2.5 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[3px_3px_0px_0px_#222224] transition-all text-xs sm:text-sm">
                   Enviar Mensaje
                 </button>
               </form>

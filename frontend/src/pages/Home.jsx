@@ -45,13 +45,13 @@ function Home() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Link 
               to="/animales" 
-              className="bg-pokeRed text-white font-retro text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#222224] transition-all"
+              className="bg-pokeRed text-white font-retro text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[3px_3px_0px_0px_#222224] transition-all text-center"
             >
               Ver Animales en Adopción
             </Link>
             <Link 
               to="/login" 
-              className="bg-white text-pokeDark font-retro text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full border-4 border-pokeDark hover:bg-pokeDark hover:text-white hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#222224] transition-all"
+              className="bg-white text-pokeDark font-retro text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeDark hover:text-white hover:-translate-y-1 hover:shadow-[3px_3px_0px_0px_#222224] transition-all text-center"
             >
               Únete como Voluntario
             </Link>
@@ -151,9 +151,9 @@ function Home() {
             <div className="text-center mt-8 sm:mt-12">
               <Link 
                 to="/animales" 
-                className="inline-block bg-pokeDark text-white font-retro text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeRed hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all"
+                className="bg-pokeDark text-white font-retro text-sm sm:text-base px-6 sm:px-8 py-3 rounded-full border-4 border-pokeDark hover:bg-pokeRed hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all"
               >
-                Ver Todos los Animales
+                Ver Todos los Animales →
               </Link>
             </div>
           </div>
@@ -189,13 +189,13 @@ function Home() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link 
               to="/login" 
-              className="bg-pokeYellow text-pokeDark font-retro text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full border-4 border-pokeDark hover:bg-white hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#222224] transition-all"
+              className="bg-pokeYellow text-pokeDark font-retro text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg border-4 border-pokeDark hover:bg-white hover:-translate-y-1 hover:shadow-[3px_3px_0px_0px_#222224] transition-all text-center"
             >
               Crear Cuenta Gratis
             </Link>
             <Link 
               to="/donaciones" 
-              className="bg-transparent text-white font-retro text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full border-4 border-white hover:bg-white hover:text-pokeRed hover:-translate-y-1 transition-all"
+              className="bg-transparent text-white font-retro text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg border-4 border-white hover:bg-white hover:text-pokeRed hover:-translate-y-1 transition-all text-center"
             >
               Hacer una Donación
             </Link>
