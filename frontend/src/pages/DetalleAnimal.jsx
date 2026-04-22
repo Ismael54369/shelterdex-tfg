@@ -239,9 +239,9 @@ function DetalleAnimal() {
           ) : !mostrarFormulario ? (
             <button 
               onClick={() => setMostrarFormulario(true)}
-              className="w-full bg-pokeRed text-white font-retro py-4 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all text-lg"
+              className="w-full bg-pokeRed text-white font-retro py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeYellow hover:text-pokeDark hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all text-xs sm:text-sm"
             >
-              ❤️ ¡Quiero Adoptarle!
+              Solicitar Adopción
             </button>
           ) : (
             <div className="bg-white border-4 border-pokeDark rounded-lg p-4 shadow-[4px_4px_0px_0px_#222224]">
