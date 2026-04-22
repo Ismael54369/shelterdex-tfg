@@ -151,9 +151,9 @@ function Home() {
             <div className="text-center mt-8 sm:mt-12">
               <Link 
                 to="/animales" 
-                className="bg-pokeDark text-white font-retro text-sm sm:text-base px-6 sm:px-8 py-3 rounded-full border-4 border-pokeDark hover:bg-pokeRed hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all"
+                className="inline-block bg-pokeDark text-white font-retro text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg border-4 border-pokeDark hover:bg-pokeRed hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224] transition-all"
               >
-                Ver Todos los Animales →
+                Ver Todos los Animales
               </Link>
             </div>
           </div>
