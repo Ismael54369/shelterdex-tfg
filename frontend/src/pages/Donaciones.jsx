@@ -206,9 +206,9 @@ function Donaciones() {
             {/* Pestañas de método */}
             <div className="flex gap-2 mb-6">
               {[
-                { id: 'tarjeta', label: '💳 Tarjeta', color: 'bg-pokeDark' },
-                { id: 'bizum', label: '📱 Bizum', color: 'bg-blue-800' },
-                { id: 'paypal', label: '🅿️ PayPal', color: 'bg-blue-500' },
+                { id: 'tarjeta', label: 'Tarjeta', color: 'bg-pokeDark' },
+                { id: 'bizum', label: 'Bizum', color: 'bg-blue-800' },
+                { id: 'paypal', label: 'PayPal', color: 'bg-blue-500' },
               ].map((m) => (
                 <button
                   key={m.id} type="button"
@@ -356,20 +356,22 @@ function Donaciones() {
               {metodoPago !== 'paypal' && (
                 <button 
                   type="submit" disabled={procesando}
-                  className={`w-full mt-6 font-retro py-4 rounded-lg border-4 transition-all text-sm sm:text-base ${
-                    procesando ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed' 
-                    : 'bg-green-500 text-white border-green-600 hover:bg-green-600 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#222224]'
+                  className={`w-full mt-6 font-bold py-3 rounded-lg border-2 transition-all text-sm ${
+                    procesando ? 'bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed' 
+                    : 'bg-green-600 text-white border-green-700 hover:bg-green-700 active:scale-[0.98]'
                   }`}
                 >
-                  {procesando ? 'Procesando...' : `Donar ${cantidad}€ con ${metodoPago === 'tarjeta' ? 'Tarjeta' : 'Bizum'}`}
+                  {procesando ? 'Procesando pago...' : `Confirmar pago · ${cantidad}€`}
                 </button>
               )}
 
               {/* Badges de confianza */}
-              <div className="flex justify-center gap-4 mt-4 text-xs text-gray-400 font-bold">
-                <span>🔒 Cifrado SSL</span>
-                <span>🛡️ Datos seguros</span>
-                <span>✅ Sin comisiones</span>
+              <div className="flex justify-center gap-3 mt-4 text-xs text-gray-400">
+                <span>Cifrado SSL</span>
+                <span>·</span>
+                <span>Datos seguros</span>
+                <span>·</span>
+                <span>Sin comisiones</span>
               </div>
             </form>
           </div>
