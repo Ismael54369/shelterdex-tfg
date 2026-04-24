@@ -87,30 +87,23 @@ fetch(`${API_URL}/api/adopciones/pendientes`, { headers: authHeaders() })      .
 
   const revisarAdopcion = async (idSolicitud, estado, animal) => {
     try {
+      const controlador = new AbortController();
+      const timeout = setTimeout(() => controlador.abort(), 15000); // 15s de margen
+
       const respuesta = await fetch(`${API_URL}/api/adopciones/revisar/${idSolicitud}`, {
         method: 'PUT',
         headers: authHeadersJSON(),
-        body: JSON.stringify({ estado })
+        body: JSON.stringify({ estado }),
+        signal: controlador.signal
       });
 
+      clearTimeout(timeout);
       const datos = await respuesta.json();
 
       if (respuesta.ok) {
         if (estado === 'aprobada') {
-          toast.success(
-            `Tarea aprobada. ${voluntario} ha recibido +${datos.xp_otorgada} XP (Total: ${datos.nueva_xp_total} XP, Nivel ${datos.nuevo_nivel})`,
-            { icon: '✅', duration: 5000 }
-          );
-          // Feedback secundario: efecto sobre las stats del animal
-          if (datos.stats_animal && (datos.efecto_energia !== 0 || datos.efecto_sociabilidad !== 0)) {
-            const signoEnergia = datos.efecto_energia >= 0 ? '+' : '';
-            const signoSoc = datos.efecto_sociabilidad >= 0 ? '+' : '';
-            toast(
-              `Stats del animal: ⚡${signoEnergia}${datos.efecto_energia} (ahora ${datos.stats_animal.energia}/100) · 💙${signoSoc}${datos.efecto_sociabilidad} (ahora ${datos.stats_animal.sociabilidad}/100)`,
-              { icon: '📊', duration: 5000 }
-            );
-          }
-          // Recargar también los animales para que el admin vea los cambios en la tabla
+          toast.success(datos.mensaje || 'Adopción aprobada.', { icon: '✅', duration: 5000 });
+          // Recargar animales para reflejar el cambio de estado
           const resAnimales = await fetch(`${API_URL}/api/animales`);
           if (resAnimales.ok) {
             setAnimales(await resAnimales.json());
@@ -124,7 +117,11 @@ fetch(`${API_URL}/api/adopciones/pendientes`, { headers: authHeaders() })      .
         toast.error(datos.error || 'Error al revisar la solicitud.');
       }
     } catch (error) {
-      toast.error('Error de conexión.');
+      if (error.name === 'AbortError') {
+        toast('La operación tardó más de lo esperado. Recarga la página para ver el estado actual.', { icon: '⏳', duration: 6000 });
+      } else {
+        toast.error('Error de conexión al servidor.');
+      }
     }
   };
 
