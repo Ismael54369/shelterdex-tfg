@@ -1,4 +1,4 @@
-# 🐾 ShelterDex
+# ShelterDex
 
 **Plataforma gamificada de gestión para refugios de animales.**
 
@@ -10,7 +10,7 @@ ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral
 
 ---
 
-## 🌐 Demo en producción
+## Demo en producción
 
 | Servicio | URL |
 |----------|-----|
@@ -28,7 +28,7 @@ ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral
 
 ---
 
-## 📋 Características principales
+## Características principales
 
 **Gestión de animales:** CRUD completo con galería de imágenes múltiples, sistema de portada, estadísticas de energía/sociabilidad editables y búsqueda con filtros por especie y estado.
 
@@ -44,7 +44,7 @@ ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral
 
 ---
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
@@ -58,7 +58,7 @@ ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral
 
 ---
 
-## 🛠️ Stack tecnológico
+## Stack tecnológico
 
 | Capa | Tecnologías |
 |------|-------------|
@@ -69,7 +69,7 @@ ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral
 
 ---
 
-## 📂 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 shelterdex-tfg/
@@ -113,7 +113,7 @@ shelterdex-tfg/
 
 ---
 
-## 🚀 Instalación local
+## Instalación local
 
 ### Requisitos previos
 
@@ -190,7 +190,7 @@ Abre `http://localhost:5173` en el navegador.
 
 ---
 
-## 🔐 Seguridad
+## Seguridad
 
 - Contraseñas hasheadas con **bcrypt** (10 salt rounds).
 - Autenticación mediante **JWT** almacenado en localStorage (clave: `tokenShelterDex`).
