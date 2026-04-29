@@ -4,7 +4,7 @@ import db from './db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
-import { Client, Environment, OrdersController } from '@paypal/paypal-server-sdk';
+import { paypalOrdersController, verificarPayPalDisponible } from './config/paypal.js';
 import { upload, obtenerRutaImagen, obtenerPublicId, useCloudinary, cloudinary } from './config/multer.js';
 import { verificarToken, verificarAdmin } from './middleware/auth.js';
 
@@ -19,32 +19,6 @@ app.use(express.json());
 
 // Servir la carpeta de imágenes como ruta pública (solo útil en desarrollo local)
 app.use('/uploads', express.static('uploads'));
-
-// ==========================================
-// CLIENTE PAYPAL (SDK oficial)
-// ==========================================
-// Lee credenciales desde .env. Si faltan, el servidor arranca igual
-// pero los endpoints de PayPal devolverán error — esto permite desarrollar
-// otras partes sin tener que configurar PayPal aún.
-const paypalClient = (process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET)
-  ? new Client({
-      clientCredentialsAuthCredentials: {
-        oAuthClientId: process.env.PAYPAL_CLIENT_ID,
-        oAuthClientSecret: process.env.PAYPAL_CLIENT_SECRET,
-      },
-      environment: process.env.PAYPAL_ENVIRONMENT === 'live' 
-        ? Environment.Production 
-        : Environment.Sandbox,
-    })
-  : null;
-
-const paypalOrdersController = paypalClient ? new OrdersController(paypalClient) : null;
-
-if (!paypalClient) {
-  console.warn('[PayPal] Credenciales no configuradas. Los endpoints /api/paypal/* devolverán 503.');
-} else {
-  console.log(`[PayPal] Cliente inicializado en modo ${process.env.PAYPAL_ENVIRONMENT || 'sandbox'}.`);
-}
 
 // ==========================================
 // RUTAS DE LA API (Endpoints)
@@ -1043,23 +1017,6 @@ app.get('/api/informes/voluntarios', verificarToken, verificarAdmin, async (req,
     res.status(500).json({ error: 'Error interno al generar el informe.' });
   }
 });
-
-// ==========================================
-// ENDPOINTS PAYPAL (pasarela de donaciones)
-// ==========================================
-// Arquitectura server-side: la orden se CREA y se CAPTURA desde el backend
-// para que el importe no sea manipulable desde el cliente. El frontend solo
-// recibe un orderID que pasa al SDK de PayPal.
-
-// Helper: valida que PayPal esté configurado antes de procesar
-const verificarPayPalDisponible = (req, res, next) => {
-  if (!paypalOrdersController) {
-    return res.status(503).json({ 
-      error: 'La pasarela de PayPal no está configurada en el servidor.' 
-    });
-  }
-  next();
-};
 
 // 1. CREAR ORDEN: el frontend pide al backend que cree una orden con un importe
 app.post('/api/paypal/crear-orden', verificarPayPalDisponible, async (req, res) => {
