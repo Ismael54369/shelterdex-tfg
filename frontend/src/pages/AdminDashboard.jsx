@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { API_URL, urlImagen } from '../config/api';
+import { API_URL } from '../config/api';
 import { authHeaders, authHeadersJSON } from '../components/admin/adminHelpers';
 import SliderStat from '../components/admin/SliderStat';
 import ModalCrear from '../components/admin/ModalCrear';
@@ -10,6 +9,9 @@ import ModalEditar from '../components/admin/ModalEditar';
 import ModalGaleria from '../components/admin/ModalGaleria';
 import TabTareas from '../components/admin/TabTareas';
 import TabAdopciones from '../components/admin/TabAdopciones';
+import TabEstadisticas from '../components/admin/TabEstadisticas';
+import TabInformes from '../components/admin/TabInformes';
+import TabAnimales from '../components/admin/TabAnimales';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -426,113 +428,19 @@ fetch(`${API_URL}/api/tareas/pendientes`, { headers: authHeaders() })      .then
       </div>
 
     {seccionActiva === 'animales' && (<>
-    {/* BARRA DE BÚSQUEDA Y FILTROS */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            {/* Campo de búsqueda */}
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="🔍 Buscar por nombre o especie..."
-                className="w-full p-2 sm:p-3 border-4 border-pokeDark rounded-lg bg-white font-bold text-sm focus:outline-none focus:border-pokeBlue"
-              />
-              {busqueda && (
-                <button
-                  onClick={() => setBusqueda('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pokeRed font-bold"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Filtro por estado */}
-            <select
-              value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value)}
-              className="p-2 sm:p-3 border-4 border-pokeDark rounded-lg bg-white font-bold text-sm focus:outline-none focus:border-pokeBlue"
-            >
-              <option value="Todos">Estado: Todos</option>
-              <option value="Refugio">Refugio</option>
-              <option value="Acogida">Acogida</option>
-              <option value="Adoptado">Adoptado</option>
-            </select>
-
-            {/* Filtro por especie */}
-            <select
-              value={filtroEspecie}
-              onChange={(e) => setFiltroEspecie(e.target.value)}
-              className="p-2 sm:p-3 border-4 border-pokeDark rounded-lg bg-white font-bold text-sm focus:outline-none focus:border-pokeBlue"
-            >
-              <option value="Todos">Especie: Todos</option>
-              <option value="Perro">Perro</option>
-              <option value="Gato">Gato</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-
-          {/* Contador de resultados */}
-          <p className="text-xs font-bold text-gray-400 mb-2">
-            Mostrando {animalesFiltrados.length} de {animales.length} animales
-          </p>
-      <div className="poke-card overflow-x-auto -mx-4 sm:mx-0 rounded-none sm:rounded-xl border-x-0 sm:border-x-4">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-pokeDark text-white font-retro text-xs">
-              <th className="p-3 sm:p-4">ID</th>
-              <th className="p-3 sm:p-4">Foto</th>
-              <th className="p-3 sm:p-4">Nombre / Estado</th>
-              <th className="p-3 sm:p-4">Especie</th>
-              <th className="p-3 sm:p-4 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="font-bold">
-            {animalesFiltrados.map((animal) => (
-              <tr key={animal.id} className="border-b-2 border-gray-200 hover:bg-pokeYellow/10 transition-colors group">
-                <td className="p-3 sm:p-4 text-gray-400 font-retro text-xs">#{animal.id}</td>
-                <td className="p-3 sm:p-4">
-                  {animal.imagen 
-                    ? <img src={urlImagen(animal.imagen)} alt={animal.nombre} className="w-10 h-10 sm:w-14 sm:h-14 object-cover rounded-lg border-2 border-pokeDark group-hover:border-pokeYellow transition-colors" />
-                    : <span className="text-2xl sm:text-3xl">{animal.emoji}</span>
-                  }
-                </td>
-                <td className="p-4">
-                  <div className="text-pokeDark text-lg">{animal.nombre}</div>
-                  <div className={`text-xs uppercase ${animal.estado === 'Adoptado' ? 'text-green-600' : 'text-pokeBlue'}`}>
-                    {animal.estado}
-                  </div>
-                </td>
-                <td className="p-4"><span className="bg-gray-200 px-2 py-1 rounded text-sm border-2 border-pokeDark uppercase">{animal.especie}</span></td>
-                <td className="p-3 sm:p-4">
-                  <div className="flex justify-center gap-1 sm:gap-2">
-                    <button onClick={() => abrirGaleria(animal)} className="bg-purple-100 text-purple-700 px-2 sm:px-3 py-1 rounded-lg border-2 border-purple-200 hover:bg-purple-500 hover:text-white hover:border-purple-500 text-xs font-bold transition-all" title="Galería">
-                      📸
-                    </button>
-                    <button onClick={() => abrirModalEditar(animal)} className="bg-blue-100 text-blue-700 px-2 sm:px-3 py-1 rounded-lg border-2 border-blue-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 text-xs font-bold transition-all" title="Editar">
-                      ✏️
-                    </button>
-                    <button onClick={() => abrirModalBorrar(animal)} className="bg-red-100 text-red-700 px-2 sm:px-3 py-1 rounded-lg border-2 border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 text-xs font-bold transition-all" title="Borrar">
-                      🗑️
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {animalesFiltrados.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500 font-bold">No se encontraron animales con esos filtros.</p>
-                <button
-                  onClick={() => { setBusqueda(''); setFiltroEstado('Todos'); setFiltroEspecie('Todos'); }}
-                  className="mt-2 text-pokeBlue font-bold text-sm hover:text-pokeRed underline"
-                >
-                  Limpiar filtros
-                </button>
-              </div>
-          )}
-      </div>
+      <TabAnimales
+        animales={animales}
+        animalesFiltrados={animalesFiltrados}
+        busqueda={busqueda}
+        setBusqueda={setBusqueda}
+        filtroEstado={filtroEstado}
+        setFiltroEstado={setFiltroEstado}
+        filtroEspecie={filtroEspecie}
+        setFiltroEspecie={setFiltroEspecie}
+        onGaleria={abrirGaleria}
+        onEditar={abrirModalEditar}
+        onBorrar={abrirModalBorrar}
+      />
 
       {/* MODAL BORRAR */}
       {animalSeleccionado && (
@@ -585,108 +493,8 @@ fetch(`${API_URL}/api/tareas/pendientes`, { headers: authHeaders() })      .then
       )}
       
       {/* SECCIÓN: ESTADÍSTICAS */}
-      {seccionActiva === 'estadisticas' && estadisticas && (
-        <div className="flex flex-col gap-6">
-
-          {/* TARJETAS KPI */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-            <div className="bg-white rounded-xl p-4 border-2 border-blue-200 hover:border-blue-400 transition-colors">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Animales</p>
-              <p className="text-xl sm:text-3xl font-retro text-pokeBlue">
-                {estadisticas.animalesPorEstado.reduce((sum, e) => sum + e.total, 0)}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl p-4 border-2 border-red-200 hover:border-red-400 transition-colors">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Voluntarios</p>
-              <p className="text-xl sm:text-3xl font-retro text-pokeRed">{estadisticas.totalVoluntarios}</p>
-            </div>
-            <div className="bg-white rounded-xl p-4 border-2 border-green-200 hover:border-green-400 transition-colors">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Aprobadas</p>
-              <p className="text-xl sm:text-3xl font-retro text-green-600">
-                {estadisticas.tareasPorEstado.find(t => t.estado === 'aprobada')?.total || 0}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl p-4 border-2 border-yellow-200 hover:border-yellow-400 transition-colors">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Pendientes</p>
-              <p className="text-xl sm:text-3xl font-retro text-yellow-500">
-                {estadisticas.tareasPorEstado.find(t => t.estado === 'pendiente')?.total || 0}
-              </p>
-            </div>
-          </div>
-
-          {/* FILA DE GRÁFICOS: Tarta + Barras */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* Gráfico de Tarta: Animales por estado */}
-            <div className="poke-card p-3 sm:p-6">
-              <h3 className="font-retro text-sm sm:text-base text-pokeDark mb-4 text-center">Animales por Estado</h3>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={estadisticas.animalesPorEstado.map(e => ({ name: e.estado, value: e.total }))}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    innerRadius={50}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                    strokeWidth={3}
-                    stroke="#222224"
-                  >
-                    {estadisticas.animalesPorEstado.map((entry, index) => (
-                      <Cell 
-                        key={index} 
-                        fill={['#3B82F6', '#F59E0B', '#10B981'][index % 3]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Gráfico de Barras: Ranking de Voluntarios */}
-            <div className="poke-card p-6">
-              <h3 className="font-retro text-pokeDark mb-4 text-center">Ranking de Voluntarios (XP)</h3>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={estadisticas.rankingVoluntarios} layout="vertical">
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="nombre" width={120} tick={{ fontSize: 12, fontWeight: 'bold' }} />
-                  <Tooltip 
-                    formatter={(value) => [`${value} XP`, 'Experiencia']}
-                  />
-                  <Bar dataKey="xp" radius={[0, 8, 8, 0]} strokeWidth={2} stroke="#222224">
-                    {estadisticas.rankingVoluntarios.map((entry, index) => (
-                      <Cell 
-                        key={index} 
-                        fill={index === 0 ? '#EE1515' : index === 1 ? '#3B82F6' : '#9CA3AF'}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Gráfico de Barras: Tareas más populares (ancho completo) */}
-          <div className="poke-card p-6">
-            <h3 className="font-retro text-pokeDark mb-4 text-center">Tareas Más Solicitadas</h3>
-            {estadisticas.tareasPopulares.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={estadisticas.tareasPopulares}>
-                  <XAxis dataKey="nombre" tick={{ fontSize: 11, fontWeight: 'bold' }} />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip formatter={(value) => [`${value} veces`, 'Solicitudes']} />
-                  <Bar dataKey="total" fill="#3B82F6" radius={[8, 8, 0, 0]} strokeWidth={2} stroke="#222224" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-center text-gray-500 font-bold py-8">Aún no hay tareas registradas.</p>
-            )}
-          </div>
-
-        </div>
+      {seccionActiva === 'estadisticas' && (
+        <TabEstadisticas estadisticas={estadisticas} />
       )}
 
       {/* SECCIÓN: SOLICITUDES DE ADOPCIÓN */}
@@ -696,65 +504,7 @@ fetch(`${API_URL}/api/tareas/pendientes`, { headers: authHeaders() })      .then
 
       {/* SECCIÓN: INFORMES PDF */}
       {seccionActiva === 'informes' && (
-        <div className="bg-white border-4 border-pokeDark rounded-xl p-4 sm:p-6 shadow-[4px_4px_0px_0px_#222224]">
-          <div className="flex justify-between items-center mb-4 sm:mb-6 border-b-2 border-gray-200 pb-3">
-            <h2 className="text-base sm:text-xl font-retro text-pokeDark">📄 Generación de Informes</h2>
-            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">PDF en tiempo real</span>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* Informe de Animales */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl">🐾</span>
-                <div>
-                  <h3 className="font-retro text-pokeDark">Informe de Animales</h3>
-                  <p className="text-sm text-gray-500 font-bold">Listado completo con estado, especie, estadísticas y datos de cada animal.</p>
-                </div>
-              </div>
-
-              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Filtrar por estado:</p>
-              <div className="flex flex-wrap gap-2">
-                {['Todos', 'Refugio', 'Acogida', 'Adoptado'].map((filtro) => (
-                  <button
-                    key={filtro}
-                    onClick={() => descargarInforme('animales', filtro)}
-                    className="bg-white font-bold text-sm py-2 px-4 rounded border-2 border-blue-300 text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
-                  >
-                    📄 {filtro}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Informe de Voluntarios */}
-            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-3xl">👥</span>
-                <div>
-                  <h3 className="font-retro text-pokeDark">Informe de Voluntarios</h3>
-                  <p className="text-sm text-gray-500 font-bold">Ranking por XP, niveles alcanzados y resumen de tareas realizadas por cada voluntario.</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => descargarInforme('voluntarios')}
-                className="bg-white font-bold text-sm py-2 px-4 rounded border-2 border-green-300 text-green-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-colors"
-              >
-                📄 Descargar Informe
-              </button>
-            </div>
-
-          </div>
-
-          {/* Nota informativa */}
-          <div className="mt-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-            <p className="text-sm text-gray-500 font-bold">
-              Los informes se generan en tiempo real desde la base de datos y se descargan en formato PDF.
-            </p>
-          </div>
-        </div>
+        <TabInformes onDescargar={descargarInforme} />
       )}
 
     </div>
