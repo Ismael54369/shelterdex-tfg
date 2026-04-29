@@ -6,6 +6,7 @@ import { paypalOrdersController, verificarPayPalDisponible } from './config/payp
 import { upload, obtenerRutaImagen, obtenerPublicId, useCloudinary, cloudinary } from './config/multer.js';
 import { verificarToken, verificarAdmin } from './middleware/auth.js';
 import authRoutes from './routes/auth.js';
+import animalesRoutes from './routes/animales.js';
 
 const app = express();
 
@@ -22,130 +23,12 @@ app.use('/uploads', express.static('uploads'));
 // Rutas de autenticación
 app.use('/api', authRoutes);
 
+// Rutas de animales + galería
+app.use('/api/animales', animalesRoutes);
+
 // ==========================================
 // RUTAS DE LA API (Endpoints)
 // ==========================================
-
-// RUTA 1: Obtener todos los animales (READ - GET)
-app.get('/api/animales', async (req, res) => {
-  try {
-    // Hacemos la consulta SQL a nuestra tabla
-    const [filas] = await db.query('SELECT * FROM animales');
-    
-    // Enviamos el resultado al Frontend en formato JSON
-    res.json(filas);
-    
-  } catch (error) {
-    console.error('Error al obtener animales:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// RUTA 1b: Obtener UN animal por ID (READ - GET)
-app.get('/api/animales/:id', async (req, res) => {
-  try {
-    const [filas] = await db.query('SELECT * FROM animales WHERE id = ?', [req.params.id]);
-    
-    if (filas.length === 0) {
-      return res.status(404).json({ error: 'Animal no encontrado' });
-    }
-    
-    res.json(filas[0]);
-  } catch (error) {
-    console.error('Error al obtener animal:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// RUTA 2: Borrar un animal (DELETE)
-app.delete('/api/animales/:id', verificarToken, verificarAdmin, async (req, res) => {  try {
-    const idAnimal = req.params.id;
-    
-    // Ejecutamos la consulta SQL para borrar
-    const [resultado] = await db.query('DELETE FROM animales WHERE id = ?', [idAnimal]);
-    
-    // Si affectedRows es 0, significa que el ID no existía
-    if (resultado.affectedRows === 0) {
-      return res.status(404).json({ error: 'Animal no encontrado' });
-    }
-    
-    res.json({ mensaje: 'Animal borrado correctamente de la Base de Datos' });
-    
-  } catch (error) {
-    console.error('Error al borrar:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// RUTA 3: Añadir un nuevo animal (CREATE - POST) — Ahora con imagen opcional
-app.post('/api/animales', verificarToken, verificarAdmin, upload.single('imagen'), async (req, res) => {  try {
-    const { nombre, especie, edad, peso, energia, sociabilidad, emoji, descripcion } = req.body;
-    
-    // Si se subió una imagen, guardamos la ruta relativa; si no, queda NULL
-    const rutaImagen = obtenerRutaImagen(req.file);
-    
-    const sql = `
-      INSERT INTO animales 
-      (nombre, especie, edad, peso, energia, sociabilidad, emoji, imagen, descripcion, estado) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Refugio')
-    `;
-    
-    const [resultado] = await db.query(sql, [
-      nombre, 
-      especie, 
-      edad, 
-      peso, 
-      energia || 50,
-      sociabilidad || 50, 
-      emoji || '🐾',
-      rutaImagen,
-      descripcion
-    ]);
-    
-    res.status(201).json({ 
-      mensaje: 'Animal añadido con éxito', 
-      id: resultado.insertId,
-      imagen: rutaImagen
-    });
-    
-  } catch (error) {
-    console.error('Error al insertar:', error);
-    res.status(500).json({ error: 'Error interno al guardar en la base de datos' });
-  }
-});
-
-// RUTA 4: Actualizar un animal existente (UPDATE - PUT) — Ahora con imagen opcional
-app.put('/api/animales/:id', verificarToken, verificarAdmin, upload.single('imagen'), async (req, res) => {  try {
-    const idAnimal = req.params.id;
-    const { nombre, especie, edad, peso, energia, sociabilidad, emoji, descripcion, estado } = req.body;
-    
-    // Si se sube nueva imagen, usamos la nueva ruta; si no, mantenemos la que ya tenía
-    let rutaImagen = req.body.imagenExistente || null;
-    if (req.file) {
-      rutaImagen = obtenerRutaImagen(req.file);
-    }
-    
-    const sql = `
-      UPDATE animales 
-      SET nombre = ?, especie = ?, edad = ?, peso = ?, energia = ?, sociabilidad = ?, emoji = ?, imagen = ?, descripcion = ?, estado = ?
-      WHERE id = ?
-    `;
-    
-    const [resultado] = await db.query(sql, [
-      nombre, especie, edad, peso, energia, sociabilidad, emoji, rutaImagen, descripcion, estado, idAnimal
-    ]);
-    
-    if (resultado.affectedRows === 0) {
-      return res.status(404).json({ error: 'Animal no encontrado' });
-    }
-    
-    res.json({ mensaje: 'Ficha del animal actualizada correctamente', imagen: rutaImagen });
-    
-  } catch (error) {
-    console.error('Error al actualizar:', error);
-    res.status(500).json({ error: 'Error interno al actualizar en la base de datos' });
-  }
-});
 
 // RUTA PÚBLICA: Estadísticas para la landing page (no requiere auth)
 app.get('/api/stats/publicas', async (req, res) => {
@@ -463,68 +346,7 @@ app.get('/api/admin/estadisticas', verificarToken, verificarAdmin, async (req, r
 // RUTAS DE GALERÍA DE IMÁGENES (MÚLTIPLES FOTOS POR ANIMAL)
 // ==========================================
 
-// 1. SUBIR IMÁGENES A UN ANIMAL (hasta 5 a la vez)
-app.post('/api/animales/:id/imagenes', verificarToken, verificarAdmin, upload.array('imagenes', 5), async (req, res) => {
-  try {
-    const animalId = req.params.id;
-
-    // Verificar que el animal existe
-    const [animal] = await db.query('SELECT id FROM animales WHERE id = ?', [animalId]);
-    if (animal.length === 0) {
-      return res.status(404).json({ error: 'Animal no encontrado.' });
-    }
-
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'No se enviaron imágenes.' });
-    }
-
-    // Comprobar si el animal ya tiene portada
-    const [portadaExiste] = await db.query(
-      'SELECT id FROM imagenes_animales WHERE animal_id = ? AND es_portada = 1', [animalId]
-    );
-
-    const valores = req.files.map((file, index) => {
-      // La primera imagen subida será portada si el animal no tiene ninguna
-      const esPortada = (portadaExiste.length === 0 && index === 0) ? 1 : 0;
-      return [animalId, obtenerRutaImagen(file), esPortada];
-    });
-
-    await db.query(
-      'INSERT INTO imagenes_animales (animal_id, ruta, es_portada) VALUES ?',
-      [valores]
-    );
-
-    // Actualizar también la columna imagen de la tabla animales con la portada
-    if (portadaExiste.length === 0 && valores.length > 0) {
-      await db.query('UPDATE animales SET imagen = ? WHERE id = ?', [valores[0][1], animalId]);
-    }
-
-    res.status(201).json({
-      mensaje: `${req.files.length} imagen(es) subida(s) correctamente.`,
-      total: req.files.length
-    });
-
-  } catch (error) {
-    console.error('Error al subir imágenes:', error);
-    res.status(500).json({ error: 'Error interno al subir imágenes.' });
-  }
-});
-
-// 2. OBTENER TODAS LAS IMÁGENES DE UN ANIMAL
-app.get('/api/animales/:id/imagenes', async (req, res) => {
-  try {
-    const [imagenes] = await db.query(
-      'SELECT * FROM imagenes_animales WHERE animal_id = ? ORDER BY es_portada DESC, fecha_subida ASC',
-      [req.params.id]
-    );
-    res.json(imagenes);
-  } catch (error) {
-    console.error('Error al obtener imágenes:', error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-});
-
-// 3. ESTABLECER UNA IMAGEN COMO PORTADA
+// ESTABLECER UNA IMAGEN COMO PORTADA
 app.put('/api/imagenes/:id/portada', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const idImagen = req.params.id;
@@ -554,7 +376,7 @@ app.put('/api/imagenes/:id/portada', verificarToken, verificarAdmin, async (req,
   }
 });
 
-// 4. BORRAR UNA IMAGEN
+// BORRAR UNA IMAGEN
 app.delete('/api/imagenes/:id', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const idImagen = req.params.id;
