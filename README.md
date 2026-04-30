@@ -110,7 +110,7 @@ shelterdex-tfg/
 │   │   └── index.css
 │   ├── .env.example              # Plantilla de variables de entorno
 │   └── package.json
-├── shelterdex_db.sql              # Script de instalación de la BD
+├── shelterdex_aiven.sql              # Script de instalación de la BD
 └── README.md                      # Este archivo
 ```
 
@@ -136,7 +136,7 @@ cd shelterdex-tfg
 Crea una base de datos llamada `shelterdex_db` en tu servidor MySQL local e importa el script:
 
 ```bash
-mysql -u root -p shelterdex_db < shelterdex_db.sql
+mysql -u root -p shelterdex_db < shelterdex_aiven.sql
 ```
 
 ### 3. Configurar el backend
