@@ -1,30 +1,11 @@
-# ShelterDex
+# ShelterDex — Plataforma Gamificada de Gestión de Refugios de Animales
 
-**Plataforma gamificada de gestión para refugios de animales.**
+Aplicación web Full-Stack que digitaliza la gestión integral de un refugio de animales, combinando un sistema de administración profesional con mecánicas de gamificación inspiradas en el universo Pokémon.
 
-ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral de un refugio de animales, combinando un sistema de administración profesional con mecánicas de gamificación que motivan a los voluntarios mediante puntos de experiencia (XP), niveles y rankings.
+**Proyecto de Fin de Grado** — Ismael González Tempa — 2º DAW — IES Playamar (Málaga)
 
-> **TFG — Desarrollo de Aplicaciones Web (DAW)**
-> IES Playamar, Málaga · Curso 2025/2026
-> Autor: Ismael González Tempa
-
----
-
-## Demo en producción
-
-| Servicio | URL |
-|----------|-----|
-| Frontend | [shelterdex-tfg.vercel.app](https://shelterdex-tfg.vercel.app) |
-| API | [shelterdex-api.onrender.com](https://shelterdex-api.onrender.com) |
-
-**Credenciales de prueba:**
-
-| Rol | Email | Contraseña |
-|-----|-------|------------|
-| Admin | `admin@shelterdex.es` | `Pikachu2026` |
-| Voluntario | `ismael@gmail.com` | `Ismael2026` |
-
-> Nota: El backend en Render puede tardar ~30s en responder la primera petición si lleva tiempo inactivo (cold start del free tier).
+🌐 **Producción:** https://shelterdex-tfg.vercel.app
+📦 **Repositorio:** https://github.com/Ismael54369/shelterdex-tfg
 
 ---
 
@@ -74,18 +55,41 @@ ShelterDex es una aplicación web Full-Stack que digitaliza la gestión integral
 ```
 shelterdex-tfg/
 ├── backend/
-│   ├── index.js              # Servidor Express + todos los endpoints
-│   ├── db.js                 # Pool de conexión MySQL con soporte SSL
-│   ├── ca.pem                # Certificado CA de Aiven
-│   ├── uploads/              # Imágenes locales (desarrollo)
-│   ├── .env                  # Variables de entorno (no en Git)
-│   ├── .env.example          # Plantilla de variables
+│   ├── config/
+│   │   ├── multer.js             # Configuración Multer + Cloudinary (dual-mode)
+│   │   └── paypal.js             # Cliente PayPal SDK + middleware disponibilidad
+│   ├── middleware/
+│   │   └── auth.js               # verificarToken + verificarAdmin (JWT)
+│   ├── routes/
+│   │   ├── adopciones.js         # Solicitud, pendientes, revisión de adopciones
+│   │   ├── animales.js           # CRUD animales + galería de imágenes
+│   │   ├── auth.js               # Login y registro con bcrypt + JWT
+│   │   ├── informes.js           # Generación de PDFs (animales + voluntarios)
+│   │   ├── paypal.js             # Crear y capturar órdenes PayPal
+│   │   ├── stats.js              # Stats públicas, perfil, ranking, dashboard admin
+│   │   └── tareas.js             # Gamificación: catálogo, registro, revisión, historial
+│   ├── index.js                  # Orquestador (~100 líneas): montaje de routers
+│   ├── db.js                     # Pool de conexión MySQL con soporte SSL
+│   ├── ca.pem                    # Certificado CA de Aiven
+│   ├── .env.example              # Plantilla de variables de entorno
 │   └── package.json
 ├── frontend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── api.js        # Helper centralizado API_URL + urlImagen()
+│   │   │   └── api.js            # Helper centralizado API_URL + urlImagen()
 │   │   ├── components/
+│   │   │   ├── admin/
+│   │   │   │   ├── useAdminData.js    # Custom hook: estados + lógica del panel admin
+│   │   │   │   ├── adminHelpers.js    # authHeaders() + authHeadersJSON()
+│   │   │   │   ├── SliderStat.jsx     # Slider energía/sociabilidad (0-100)
+│   │   │   │   ├── ModalCrear.jsx     # Modal formulario crear animal
+│   │   │   │   ├── ModalEditar.jsx    # Modal formulario editar animal
+│   │   │   │   ├── ModalGaleria.jsx   # Modal galería de imágenes
+│   │   │   │   ├── TabAnimales.jsx    # Tabla + filtros + búsqueda
+│   │   │   │   ├── TabTareas.jsx      # Bandeja de validación de tareas
+│   │   │   │   ├── TabAdopciones.jsx  # Solicitudes de adopción
+│   │   │   │   ├── TabEstadisticas.jsx # KPIs + gráficos Recharts
+│   │   │   │   └── TabInformes.jsx    # Descarga de informes PDF
 │   │   │   ├── Header.jsx
 │   │   │   ├── Footer.jsx
 │   │   │   └── RutaProtegida.jsx
@@ -94,7 +98,7 @@ shelterdex-tfg/
 │   │   │   ├── Animales.jsx
 │   │   │   ├── DetalleAnimal.jsx
 │   │   │   ├── Login.jsx
-│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── AdminDashboard.jsx    # Orquestador (~130 líneas)
 │   │   │   ├── DashboardVoluntario.jsx
 │   │   │   ├── Donaciones.jsx
 │   │   │   ├── Faq.jsx
@@ -104,11 +108,10 @@ shelterdex-tfg/
 │   │   │   └── Cookies.jsx
 │   │   ├── App.jsx
 │   │   └── index.css
-│   ├── .env                  # Variables de entorno (no en Git)
-│   ├── .env.example          # Plantilla de variables
+│   ├── .env.example              # Plantilla de variables de entorno
 │   └── package.json
-├── shelterdex_db.sql          # Script de instalación de la BD
-└── README.md                  # Este archivo
+├── shelterdex_db.sql              # Script de instalación de la BD
+└── README.md                      # Este archivo
 ```
 
 ---
@@ -142,29 +145,9 @@ mysql -u root -p shelterdex_db < shelterdex_db.sql
 cd backend
 npm install
 cp .env.example .env
+# Editar .env con tus credenciales de BD, JWT_SECRET, etc.
+npm start
 ```
-
-Edita `backend/.env` con tus valores locales:
-
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=shelterdex_db
-DB_SSL=false
-PORT=3000
-JWT_SECRET=genera_un_secret_aleatorio
-FRONTEND_URL=http://localhost:5173
-```
-
-Inicia el servidor:
-
-```bash
-npm run dev
-```
-
-Deberías ver: `Base de Datos MySQL conectada con éxito` y `API ShelterDex corriendo en http://localhost:3000`.
 
 ### 4. Configurar el frontend
 
@@ -172,17 +155,7 @@ Deberías ver: `Base de Datos MySQL conectada con éxito` y `API ShelterDex corr
 cd ../frontend
 npm install
 cp .env.example .env
-```
-
-Edita `frontend/.env`:
-
-```env
-VITE_API_URL=http://localhost:3000
-```
-
-Inicia el frontend:
-
-```bash
+# Editar .env: VITE_API_URL=http://localhost:3000
 npm run dev
 ```
 
@@ -190,19 +163,15 @@ Abre `http://localhost:5173` en el navegador.
 
 ---
 
-## Seguridad
+## Credenciales de prueba
 
-- Contraseñas hasheadas con **bcrypt** (10 salt rounds).
-- Autenticación mediante **JWT** almacenado en localStorage (clave: `tokenShelterDex`).
-- Middlewares compuestos: `verificarToken` (usuario logueado) + `verificarAdmin` (solo admin).
-- Validación server-side de todos los inputs (importes PayPal, formatos de imagen, datos de adopción).
-- CORS dinámico configurado desde variable de entorno.
-- Credenciales de servicios externos exclusivamente en `.env` (nunca en el código).
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Admin | admin@shelterdex.com | Admin1234 |
+| Voluntario | maria@shelterdex.com | Maria1234 |
 
 ---
 
-## 📄 Licencia
+## Licencia
 
-Proyecto académico desarrollado como Trabajo de Fin de Grado. Todos los derechos reservados.
-
-© 2026 Ismael González Tempa — IES Playamar, Málaga.
+Proyecto académico — Todos los derechos reservados © 2026 Ismael González Tempa
