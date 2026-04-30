@@ -9,6 +9,22 @@ Aplicación web Full-Stack que digitaliza la gestión integral de un refugio de 
 
 ---
 
+## Características principales
+
+**Gestión de animales:** CRUD completo con galería de imágenes múltiples, sistema de portada, estadísticas de energía/sociabilidad editables y búsqueda con filtros por especie y estado.
+
+**Sistema de gamificación:** Los voluntarios registran tareas con los animales del refugio. Un administrador las aprueba o rechaza. Al aprobar, el voluntario gana XP calculada con una fórmula exponencial (`Nivel = floor((XP/100)^(1/1.5)) + 1`) y las estadísticas del animal se modifican automáticamente según el tipo de tarea.
+
+**Flujo de adopción:** Formulario público de solicitud, bandeja de validación para el admin y cambio automático del estado del animal a "Adoptado" al aprobar.
+
+**Pasarela de donaciones:** Integración real con PayPal Sandbox (creación y captura de órdenes server-side), simulación de tarjeta con validación Luhn y simulación realista de Bizum con flujo de 3 fases.
+
+**Informes PDF:** Generación en tiempo real de informes de animales (filtrable por estado) y de voluntarios (ranking + resumen de tareas) con PDFKit.
+
+**Dashboard analítico:** Gráficos interactivos con Recharts (tarta de animales por estado, barras de ranking, tareas populares) y KPIs en tiempo real.
+
+---
+
 ## Arquitectura
 
 ```
