@@ -167,8 +167,8 @@ Abre `http://localhost:5173` en el navegador.
 
 | Rol | Email | Contraseña |
 |-----|-------|------------|
-| Admin | admin@shelterdex.com | Admin1234 |
-| Voluntario | maria@shelterdex.com | Maria1234 |
+| Admin | admin@shelterdex.es | Pikachu2026 |
+| Voluntario | ismael@gmail.com | Ismael2026 |
 
 ---
 
