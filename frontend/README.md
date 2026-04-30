@@ -68,6 +68,18 @@ frontend/src/
 ├── config/
 │   └── api.js                 # API_URL + urlImagen() centralizado
 ├── components/
+│   ├── admin/                 # Componentes del panel de administración
+│   │   ├── useAdminData.js    # Custom hook: todos los estados y lógica (fetches, handlers)
+│   │   ├── adminHelpers.js    # authHeaders() + authHeadersJSON() (token JWT)
+│   │   ├── SliderStat.jsx     # Slider de energía/sociabilidad (0-100)
+│   │   ├── ModalCrear.jsx     # Modal con formulario para crear animal
+│   │   ├── ModalEditar.jsx    # Modal con formulario pre-rellenado para editar animal
+│   │   ├── ModalGaleria.jsx   # Modal con galería de imágenes (subir, portada, borrar)
+│   │   ├── TabAnimales.jsx    # Tabla de animales con búsqueda, filtros y acciones
+│   │   ├── TabTareas.jsx      # Bandeja de validación de tareas pendientes
+│   │   ├── TabAdopciones.jsx  # Listado de solicitudes de adopción
+│   │   ├── TabEstadisticas.jsx # KPIs + gráficos con Recharts
+│   │   └── TabInformes.jsx    # Descarga de informes PDF
 │   ├── Header.jsx             # Navegación sticky con avatar e indicador de ruta
 │   ├── Footer.jsx             # 4 columnas: branding, plataforma, legal, contacto
 │   └── RutaProtegida.jsx      # HOC que verifica JWT y rol antes de renderizar
@@ -77,7 +89,7 @@ frontend/src/
 │   ├── DetalleAnimal.jsx      # Ficha individual: galería, adopción, animales relacionados
 │   ├── Login.jsx              # Login/Registro con diseño Pokéball y validación de contraseña
 │   ├── DashboardVoluntario.jsx # Panel: registrar tareas, historial, ranking, perfil con XP
-│   ├── AdminDashboard.jsx     # Panel con 5 pestañas: animales, tareas, stats, adopciones, informes
+│   ├── AdminDashboard.jsx     # Orquestador (~130 líneas): cabecera, pestañas, renderizado
 │   ├── Donaciones.jsx         # Pasarela: tarjeta (Luhn), Bizum (simulación), PayPal (SDK real)
 │   ├── Faq.jsx                # Preguntas frecuentes con acordeones
 │   ├── Soporte.jsx            # Formulario de contacto/tickets
@@ -87,6 +99,19 @@ frontend/src/
 ├── App.jsx                    # Router principal con todas las rutas
 └── index.css                  # Estilos globales y clase .scrollbar-hide
 ```
+
+---
+
+## Arquitectura del AdminDashboard
+
+El panel de administración sigue una arquitectura de **componente orquestador + componentes de presentación**:
+
+- **`AdminDashboard.jsx` (~130 líneas):** renderiza la cabecera, las pestañas de navegación y delega cada sección a su componente Tab/Modal correspondiente.
+- **`useAdminData.js` (custom hook):** encapsula todos los `useState`, `useEffect` y funciones de lógica (fetches, handlers de CRUD, galería, tareas, adopciones, informes). Devuelve estados y acciones que el orquestador pasa por props a los componentes hijos.
+- **Componentes Tab (`TabAnimales`, `TabTareas`, etc.):** componentes de presentación puros que reciben datos y callbacks por props.
+- **Componentes Modal (`ModalCrear`, `ModalEditar`, `ModalGaleria`):** formularios modales que reciben los handlers del hook.
+
+Este patrón mantiene el flujo de datos unidireccional de React y facilita la mantenibilidad al aislar cada funcionalidad en su propio archivo.
 
 ---
 
@@ -152,7 +177,7 @@ Funcionalidades: selección de animal y tarea desde desplegable, historial de ta
 
 ## Autenticación
 
-El token JWT se almacena en `localStorage` bajo la clave `tokenShelterDex`. Los helpers `authHeaders()` y `authHeadersJSON()` del `AdminDashboard.jsx` envían el token en las cabeceras de las peticiones protegidas. El componente `RutaProtegida.jsx` verifica la existencia del token y opcionalmente el rol antes de renderizar páginas privadas.
+El token JWT se almacena en `localStorage` bajo la clave `tokenShelterDex`. Los helpers `authHeaders()` y `authHeadersJSON()` de `components/admin/adminHelpers.js` envían el token en las cabeceras de las peticiones protegidas. El componente `RutaProtegida.jsx` verifica la existencia del token y opcionalmente el rol antes de renderizar páginas privadas.
 
 ---
 
